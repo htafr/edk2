@@ -334,6 +334,8 @@ typedef struct {
 #define SpdmGenerateErrorResponse         libspdm_generate_error_response
 #define SpdmTransportPciDoeEncodeMessage  libspdm_transport_pci_doe_encode_message
 #define SpdmTransportPciDoeDecodeMessage  libspdm_transport_pci_doe_decode_message
+#define SpdmTransportMctpEncodeMessage    libspdm_transport_mctp_encode_message
+#define SpdmTransportMctpDecodeMessage    libspdm_transport_mctp_decode_message
 
 #define SpdmMeasurementCollectionFunc         libspdm_measurement_collection
 #define SpdmRequesterDataSignFunc             libspdm_requester_data_sign

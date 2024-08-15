@@ -35,9 +35,14 @@
   UefiDriverEntryPoint
   UefiLib
   VirtioLib
-  SpdmSecurityLib
+  PcdLib
+  TpmMeasurementLib
+  RngLib
+  BaseCryptLib
   SpdmRequesterLib
   SpdmTransportMctpLib
+  SpdmTransportPciDoeLib
+  SpdmMeasurementLib
   CryptlibWrapper
 
 [Protocols]

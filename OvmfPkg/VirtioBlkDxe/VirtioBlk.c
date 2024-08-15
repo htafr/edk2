@@ -29,11 +29,14 @@
 
 #include <hal/base.h>
 #include <library/spdm_return_status.h>
+#include <library/spdm_lib_config.h>
 #include <Stub/SpdmLibStub.h>
 #include <Library/SpdmSecurityLib.h>
 
 #include "VirtioBlk.h"
 #include "VirtioBlkSpdm.h"
+
+LIST_ENTRY  mSpdmDeviceList = INITIALIZE_LIST_HEAD_VARIABLE (mSpdmDeviceList);
 
 EDKII_DEVICE_SECURITY_POLICY_PROTOCOL  *mDeviceSecurityPolicy;
 
@@ -297,12 +300,12 @@ SynchronousRequest (
   // Prepare virtio-blk request header, setting zero size for flush.
   // IO Priority is homogeneously 0.
   //
-  Request.Type = RequestIsWrite ?
+  Request->Type = RequestIsWrite ?
                  (BufferSize == 0 ? VIRTIO_BLK_T_FLUSH : VIRTIO_BLK_T_OUT) :
                  VIRTIO_BLK_T_IN;
-  if (RequestIsSpdm) Request.Type &= VIRTIO_BLK_T_SPDM;
-  Request.IoPrio = 0;
-  Request.Sector = MultU64x32 (Lba, BlockSize / 512);
+  if (RequestIsSpdm) Request->Type &= VIRTIO_BLK_T_SPDM;
+  Request->IoPrio = 0;
+  Request->Sector = MultU64x32 (Lba, BlockSize / 512);
 
   //
   // Host status is bi-directional (we preset with a value and expect the
@@ -667,12 +670,16 @@ VirtioBlkSpdmSendMessage (
   VBLK_DEV   *Dev;
   EFI_LBA    Lba;
   EFI_STATUS Status;
+  VOID*      Buffer;
 
   Lba = 0;
 
   if (MessageSize == 0) {
-    return SpdmReturn;
+    return LIBSPDM_STATUS_SUCCESS;
   }
+
+  Buffer = AllocateZeroPool (MessageSize);
+  CopyMem(Buffer, Message, MessageSize);
 
   // WARN: when verifying the blocksize may lead to an error
   Dev = VIRTIO_BLK_FROM_SPDM_CONTEXT (SpdmContext);
@@ -690,7 +697,7 @@ VirtioBlkSpdmSendMessage (
             Dev,
             Lba,
             MessageSize,
-            Message,
+            Buffer,
             TRUE,       // RequestIsWrite
             TRUE
             );
@@ -721,7 +728,7 @@ VirtioBlkSpdmReceiveMessage (
   Status = VerifyReadWriteRequest (
              &Dev->BlockIoMedia,
              Lba,
-             *MessageSizeSize,
+             *MessageSize,
              FALSE               // RequestIsWrite
              );
   if (EFI_ERROR (Status)) {
@@ -746,12 +753,10 @@ VirtioBlkSpdmReceiveMessage (
 SPDM_RETURN
 SpdmDeviceAcquireSenderBuffer (
   VOID   *Context,
-  UINTN  *MaxMsgSize,
   VOID   **MsgBufPtr
   )
 {
   ASSERT (!mSendReceiveBufferAcquired);
-  *MaxMsgSize = sizeof (mSendReceiveBuffer);
   *MsgBufPtr  = mSendReceiveBuffer;
   ZeroMem (mSendReceiveBuffer, sizeof (mSendReceiveBuffer));
   mSendReceiveBufferAcquired = TRUE;
@@ -775,12 +780,10 @@ SpdmDeviceReleaseSenderBuffer (
 SPDM_RETURN
 SpdmDeviceAcquireReceiverBuffer (
   VOID   *Context,
-  UINTN  *MaxMsgSize,
   VOID   **MsgBufPtr
   )
 {
   ASSERT (!mSendReceiveBufferAcquired);
-  *MaxMsgSize = sizeof (mSendReceiveBuffer);
   *MsgBufPtr  = mSendReceiveBuffer;
   ZeroMem (mSendReceiveBuffer, sizeof (mSendReceiveBuffer));
   mSendReceiveBufferAcquired = TRUE;
@@ -816,16 +819,18 @@ CreateSpdmDriverContext (
   SPDM_DRIVER_DEVICE_CONTEXT  *SpdmDriverContext;
   VOID                        *SpdmContext;
   EFI_STATUS                  Status;
-  SPDM_RETURN                 SpdmReturn;
   VOID                        *Data;
   UINTN                       DataSize;
   SPDM_DATA_PARAMETER         Parameter;
+  UINTN                       ScratchBufferSize;
+  /*
+  BOOLEAN                     HasRspPubCert;
+  SPDM_RETURN                 SpdmReturn;
   UINT8                       Data8;
   UINT16                      Data16;
   UINT32                      Data32;
-  BOOLEAN                     HasRspPubCert;
-  UINTN                       ScratchBufferSize;
-  BOOLEAN                     IsRequrester;
+  BOOLEAN                     IsRequester;
+  */
 
   SpdmDriverContext = AllocateZeroPool (sizeof (*SpdmDriverContext));
   if (SpdmDriverContext == NULL) {
@@ -846,8 +851,15 @@ CreateSpdmDriverContext (
   mScratchBuffer    = AllocateZeroPool (ScratchBufferSize);
   ASSERT (mScratchBuffer != NULL);
 
-  SpdmRegisterDeviceIoFunc (SpdmContext, SpdmDeviceSendMessage, SpdmDeviceReceiveMessage);
-  SpdmRegisterTransportLayerFunc (SpdmContext, SpdmTransportMctpEncodeMessage, SpdmTransportMctpDecodeMessage);
+  SpdmRegisterDeviceIoFunc (SpdmContext, VirtioBlkSpdmSendMessage, VirtioBlkSpdmReceiveMessage);
+  SpdmRegisterTransportLayerFunc (
+    SpdmContext,
+    LIBSPDM_MAX_SPDM_MSG_SIZE,
+    LIBSPDM_TRANSPORT_HEADER_SIZE,
+    LIBSPDM_TRANSPORT_TAIL_SIZE,
+    SpdmTransportMctpEncodeMessage,
+    SpdmTransportMctpDecodeMessage
+    );
   /*
   SpdmRegisterTransportLayerFunc (
     SpdmContext,
@@ -858,6 +870,8 @@ CreateSpdmDriverContext (
   */
   SpdmRegisterDeviceBufferFunc (
     SpdmContext,
+    LIBSPDM_SENDER_BUFFER_SIZE,
+    LIBSPDM_RECEIVER_BUFFER_SIZE,
     SpdmDeviceAcquireSenderBuffer,
     SpdmDeviceReleaseSenderBuffer,
     SpdmDeviceAcquireReceiverBuffer,
@@ -936,13 +950,13 @@ CreateSpdmDriverContext (
              &DataSize
              );
   if (!EFI_ERROR (Status)) {
-    HasRspPubCert = TRUE;
+    //HasRspPubCert = TRUE;
     ZeroMem (&Parameter, sizeof (Parameter));
     Parameter.location = SpdmDataLocationLocal;
-    SpdmSetData (SpdmContext, SpdmDataPeerPublicCertChains, &Parameter, Data, DataSize);
+    SpdmSetData (SpdmContext, SpdmDataLocalPublicCertChain, &Parameter, Data, DataSize);
     // Do not free it.
   } else {
-    HasRspPubCert = FALSE;
+    //HasRspPubCert = FALSE;
   }
 
   CHAR8 Message[5] = {0x05, 0x10, 0x84, 0x00, 0x00};
@@ -1017,11 +1031,9 @@ CreateSpdmDriverContext (
   */
 
   return SpdmDriverContext;
-  /*
 Error:
   FreePool (SpdmDriverContext);
   return NULL;
-  */
 }
 
 /**
