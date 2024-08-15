@@ -17,6 +17,8 @@
 
 [Includes]
   Include
+  SecurityPkg/DeviceSecurity/SpdmLib/Include
+  SecurityPkg/DeviceSecurity/SpdmLib/libspdm/include
 
 [LibraryClasses]
   ##  @libraryclass  Search and install ACPI tables.

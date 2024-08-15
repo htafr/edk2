@@ -265,6 +265,19 @@
   SmbusLib|MdePkg/Library/BaseSmbusLibNull/BaseSmbusLibNull.inf
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
 
+  SpdmSecurityLib|SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
+  SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmDeviceSecretLibNull.inf
+  SpdmCryptLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCryptLib.inf
+  SpdmCommonLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCommonLib.inf
+  SpdmRequesterLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmRequesterLib.inf
+  SpdmResponderLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmResponderLib.inf
+  SpdmSecuredMessageLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmSecuredMessageLib.inf
+  SpdmTransportMctpLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmTransportMctpLib.inf
+  SpdmTransportPciDoeLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmTransportPciDoeLib.inf
+  CryptlibWrapper|SecurityPkg/DeviceSecurity/OsStub/CryptlibWrapper/CryptlibWrapper.inf
+  PlatformLibWrapper|SecurityPkg/DeviceSecurity/OsStub/PlatformLibWrapper/PlatformLibWrapper.inf
+  MemLibWrapper|SecurityPkg/DeviceSecurity/OsStub/MemLibWrapper/MemLibWrapper.inf
+
 !include OvmfPkg/Include/Dsc/OvmfTpmLibs.dsc.inc
 !include OvmfPkg/Include/Dsc/ShellLibs.dsc.inc
 
@@ -865,7 +878,13 @@
   }
   OvmfPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
   OvmfPkg/Virtio10Dxe/Virtio10.inf
-  OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
+  OvmfPkg/VirtioBlkDxe/VirtioBlk.inf {
+    <LibraryClasses>
+      SpdmSecurityLib|SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
+      SpdmRequesterLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmRequesterLib.inf
+      SpdmTransportMctpLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmTransportMctpLib.inf
+      SpdmTransportPciDoeLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmTransportPciDoeLib.inf
+    }
   OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
   OvmfPkg/VirtioSerialDxe/VirtioSerial.inf
 !if $(PVSCSI_ENABLE) == TRUE

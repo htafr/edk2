@@ -18,10 +18,14 @@
 [Sources]
   VirtioBlk.c
   VirtioBlk.h
+  VirtioBlkSpdm.h
 
 [Packages]
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   OvmfPkg/OvmfPkg.dec
+  SecurityPkg/SecurityPkg.dec
+  CryptoPkg/CryptoPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -31,7 +35,31 @@
   UefiDriverEntryPoint
   UefiLib
   VirtioLib
+  SpdmSecurityLib
+  SpdmRequesterLib
+  SpdmTransportMctpLib
+  CryptlibWrapper
 
 [Protocols]
   gEfiBlockIoProtocolGuid   ## BY_START
   gVirtioDeviceProtocolGuid ## TO_START
+  gEdkiiDeviceSecurityProtocolGuid        ## PRODUCES
+  gSpdmProtocolGuid                  ## PRODUCES
+  gEdkiiDeviceSecurityPolicyProtocolGuid  ## CONSUMES
+  gSpdmIoProtocolGuid                ## CONSUMES
+  gEdkiiDeviceIdentifierTypePciGuid       ## COMSUMES
+  gEdkiiDeviceIdentifierTypeUsbGuid       ## COMSUMES
+
+[Pcd]
+  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmBaseAsymAlgo     ## COMSUMES
+  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmBaseHashAlgo     ## COMSUMES
+  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmDHENamedGroup    ## COMSUMES
+  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmAEADCipherSuite  ## COMSUMES
+  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmKeySchedule      ## COMSUMES
+
+[Guids]
+  gEdkiiDeviceSignatureDatabaseGuid       ## CONSUMES
+  gEfiDeviceSecurityPkgTestConfig         ## CONSUMES
+
+[Depex]
+  gEdkiiDeviceSecurityPolicyProtocolGuid
