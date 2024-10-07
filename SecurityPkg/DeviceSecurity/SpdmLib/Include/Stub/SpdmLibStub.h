@@ -82,7 +82,7 @@ typedef struct {
   /*UINT8                                 HashValue[HashSize];*/
 } SPDM_MEASUREMENT_BLOCK_DMTF;
 
-#define  SPDM_DATA_PARAMETER  libspdm_data_parameter_t
+#define SPDM_DATA_PARAMETER  libspdm_data_parameter_t
 
 typedef enum {
   //

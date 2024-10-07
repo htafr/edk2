@@ -35,14 +35,10 @@ typedef struct {
   EFI_BLOCK_IO_PROTOCOL     BlockIo;           // VirtioBlkInit       1
   EFI_BLOCK_IO_MEDIA        BlockIoMedia;      // VirtioBlkInit       1
   VOID                      *RingMap;          // VirtioRingMap       2
-
-  VOID                      *SpdmContext;
 } VBLK_DEV;
 
 #define VIRTIO_BLK_FROM_BLOCK_IO(BlockIoPointer) \
         CR (BlockIoPointer, VBLK_DEV, BlockIo, VBLK_SIG)
-#define VIRTIO_BLK_FROM_SPDM_CONTEXT(SpdmContextPointer) \
-        CR (SpdmContextPointer, VBLK_DEV, SpdmContext, VBLK_SIG)
 
 /**
 

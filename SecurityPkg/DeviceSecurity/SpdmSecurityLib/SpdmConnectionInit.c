@@ -43,6 +43,72 @@ RecordSpdmDeviceContextInList (
 }
 
 /**
+  Return the SPDM device via SPDM protocol
+
+  @param[in] Spdm    The SPDM protocol instance
+
+  @return The SPDM device context
+
+**/
+SPDM_DEVICE_CONTEXT *
+EFIAPI
+GetSpdmDeviceContextViaSpdmProtocol (
+  IN SPDM_PROTOCOL  *SpdmProtocol
+  )
+{
+  LIST_ENTRY                    *Link;
+  SPDM_DEVICE_CONTEXT_INSTANCE  *CurrentSpdmDeviceContext;
+  LIST_ENTRY                    *SpdmDeviceContextList;
+
+  SpdmDeviceContextList = &mSpdmDeviceContextList;
+  Link = GetFirstNode (SpdmDeviceContextList);
+  while (!IsNull (SpdmDeviceContextList, Link)) {
+    CurrentSpdmDeviceContext = SPDM_DEVICE_CONTEXT_INSTANCE_FROM_LINK (Link);
+
+    if (CurrentSpdmDeviceContext->SpdmDeviceContext->SpdmProtocol == SpdmProtocol) {
+      return CurrentSpdmDeviceContext->SpdmDeviceContext;
+    }
+
+    Link = GetNextNode (SpdmDeviceContextList, Link);
+  }
+
+  return NULL;
+}
+
+/**
+  Return the SPDM device via SPDM protocol
+
+  @param[in] DeviceId    The Identifier for the device
+
+  @return The SPDM device context
+
+**/
+SPDM_DEVICE_CONTEXT *
+EFIAPI
+GetSpdmDeviceContextViaDeviceId (
+  IN EDKII_DEVICE_IDENTIFIER *DeviceId
+  )
+{
+  LIST_ENTRY                    *Link;
+  SPDM_DEVICE_CONTEXT_INSTANCE  *CurrentSpdmDeviceContext;
+  LIST_ENTRY                    *SpdmDeviceContextList;
+
+  SpdmDeviceContextList = &mSpdmDeviceContextList;
+  Link = GetFirstNode (SpdmDeviceContextList);
+  while (!IsNull (SpdmDeviceContextList, Link)) {
+    CurrentSpdmDeviceContext = SPDM_DEVICE_CONTEXT_INSTANCE_FROM_LINK (Link);
+
+    if (CurrentSpdmDeviceContext->SpdmDeviceContext->DeviceId.DeviceHandle == DeviceId->DeviceHandle) {
+      return CurrentSpdmDeviceContext->SpdmDeviceContext;
+    }
+
+    Link = GetNextNode (SpdmDeviceContextList, Link);
+  }
+
+  return NULL;
+}
+
+/**
   get Spdm Io protocol from Context list via spdm context.
 
   @param[in]  SpdmContext        The SPDM context of the requester.
@@ -175,6 +241,7 @@ CreateSpdmDeviceContext (
   VOID                 *ScratchBuffer;
   UINTN                ScratchBufferSize;
   EFI_STATUS           Status;
+  SPDM_VERSION_NUMBER  SpdmVersion;
   SPDM_RETURN          SpdmReturn;
   EFI_SIGNATURE_LIST   *DbList;
   EFI_SIGNATURE_DATA   *Cert;
@@ -312,6 +379,8 @@ CreateSpdmDeviceContext (
              (VOID **)&SpdmDeviceContext->SignatureList,
              &SpdmDeviceContext->SignatureListSize
              );
+
+  DEBUG ((DEBUG_INFO, "[EDKII @ %a]: SpdmDeviceContext->SignatureListSize - 0x%X\n\n\n", __func__, SpdmDeviceContext->SignatureListSize));
   if ((!EFI_ERROR (Status)) && (SpdmDeviceContext->SignatureList != NULL)) {
     DbList = SpdmDeviceContext->SignatureList;
     DbSize = SpdmDeviceContext->SignatureListSize;
@@ -336,6 +405,14 @@ CreateSpdmDeviceContext (
       for (Index = 0; Index < CertCount; Index++) {
         Data     = Cert->SignatureData;
         DataSize = DbList->SignatureSize - sizeof (EFI_GUID);
+
+        DEBUG ((DEBUG_INFO,
+              "[EDKII @ %a]:\n"
+              ,
+              __func__));
+        for (UINTN i = 0 ; i < DataSize; i++)
+          DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)Data)[i]));
+        DEBUG ((DEBUG_INFO, "\n"));
 
         ZeroMem (&Parameter, sizeof (Parameter));
         Parameter.location = SpdmDataLocationLocal;
@@ -364,6 +441,28 @@ CreateSpdmDeviceContext (
     }
   }
 
+  if (SpdmDeviceInfo->Version != 0) {
+    ZeroMem (&Parameter, sizeof (Parameter));
+    Parameter.location = SpdmDataLocationLocal;
+    SpdmVersion = SpdmDeviceInfo->Version << SPDM_VERSION_NUMBER_SHIFT_BIT;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataSpdmVersion, &Parameter, &SpdmVersion, sizeof (SpdmVersion));
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      ASSERT (FALSE);
+      goto Error;
+    }
+  }
+
+  if (SpdmDeviceInfo->SecuredMessageVersion != 0) {
+    ZeroMem (&Parameter, sizeof (Parameter));
+    Parameter.location = SpdmDataLocationLocal;
+    SpdmVersion = SpdmDeviceInfo->SecuredMessageVersion << SPDM_VERSION_NUMBER_SHIFT_BIT;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataSecuredMessageVersion, &Parameter, &SpdmVersion, sizeof (SpdmVersion));
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      ASSERT (FALSE);
+      goto Error;
+    }
+  }
+
   Data8 = 0;
   ZeroMem (&Parameter, sizeof (Parameter));
   Parameter.location = SpdmDataLocationLocal;
@@ -373,14 +472,31 @@ CreateSpdmDeviceContext (
     goto Error;
   }
 
-  Data32     = 0;
+  if (SpdmDeviceInfo->RequesterCapabilityFlags != 0) {
+    Data32 = SpdmDeviceInfo->RequesterCapabilityFlags;
+  } else {
+    Data32 = 0;
+  }
+  if (SpdmDeviceInfo->SlotId == 0xFF) {
+    Data32 |= SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PUB_KEY_ID_CAP;
+    Data32 &= ~SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CERT_CAP;
+    Data32 &= ~SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MULTI_KEY_CAP;
+  }
+  if (SpdmDeviceInfo->CapabilityFlags != 0) {
+    Data32 = SpdmDeviceInfo->CapabilityFlags;
+    SpdmDeviceInfo->RequesterCapabilityFlags = Data32;
+  }
   SpdmReturn = SpdmSetData (SpdmContext, SpdmDataCapabilityFlags, &Parameter, &Data32, sizeof (Data32));
   if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
     ASSERT (FALSE);
     goto Error;
   }
 
-  Data8      = SPDM_MEASUREMENT_SPECIFICATION_DMTF;
+  if (SpdmDeviceInfo->MeasurementSpec != 0) {
+    Data8 = SpdmDeviceInfo->MeasurementSpec;
+  } else {
+    Data8 = SPDM_MEASUREMENT_SPECIFICATION_DMTF;
+  }
   SpdmReturn = SpdmSetData (SpdmContext, SpdmDataMeasurementSpec, &Parameter, &Data8, sizeof (Data8));
   if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
     ASSERT (FALSE);
@@ -397,7 +513,6 @@ CreateSpdmDeviceContext (
              SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384 |
              SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P521;
   }
-
   SpdmReturn = SpdmSetData (SpdmContext, SpdmDataBaseAsymAlgo, &Parameter, &Data32, sizeof (Data32));
   if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
     ASSERT (FALSE);
@@ -411,8 +526,73 @@ CreateSpdmDeviceContext (
              SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384 |
              SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_512;
   }
-
   SpdmReturn = SpdmSetData (SpdmContext, SpdmDataBaseHashAlgo, &Parameter, &Data32, sizeof (Data32));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->DheAlgo != 0) {
+    Data16 = SpdmDeviceInfo->DheAlgo;
+  } else {
+    Data16 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataDHENameGroup, &Parameter, &Data16, sizeof (Data16));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->AeadAlgo != 0) {
+    Data16 = SpdmDeviceInfo->AeadAlgo;
+  } else {
+    Data16 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataAEADCipherSuite, &Parameter, &Data16, sizeof (Data16));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->ReqBaseAsymAlgo != 0) {
+    Data16 = SpdmDeviceInfo->ReqBaseAsymAlgo;
+  } else {
+    Data16 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataReqBaseAsymAlg, &Parameter, &Data16, sizeof (Data16));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->KeyScheduleAlgo != 0) {
+    Data16 = SpdmDeviceInfo->KeyScheduleAlgo;
+  } else {
+    Data16 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataKeySchedule, &Parameter, &Data16, sizeof (Data16));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->OtherParamsSupport != 0) {
+    Data8 = SpdmDeviceInfo->OtherParamsSupport;
+  } else {
+    Data8 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataOtherParamsSupport, &Parameter, &Data8, sizeof (Data8));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    ASSERT (FALSE);
+    goto Error;
+  }
+
+  if (SpdmDeviceInfo->MelSpec != 0) {
+    Data8 = SpdmDeviceInfo->MelSpec;
+  } else {
+    Data8 = 0;
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataMelSpec, &Parameter, &Data8, sizeof (Data8));
   if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
     ASSERT (FALSE);
     goto Error;

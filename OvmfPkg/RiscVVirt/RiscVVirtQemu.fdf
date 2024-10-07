@@ -61,6 +61,7 @@ APRIORI DXE {
   INF  EmbeddedPkg/Drivers/FdtClientDxe/FdtClientDxe.inf
   INF  UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
   INF  OvmfPkg/VirtNorFlashDxe/VirtNorFlashDxe.inf
+  INF  OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
 }
 
 #
@@ -72,6 +73,7 @@ INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
 INF  OvmfPkg/Fdt/VirtioFdtDxe/VirtioFdtDxe.inf
 INF  EmbeddedPkg/Drivers/FdtClientDxe/FdtClientDxe.inf
 INF  OvmfPkg/Fdt/HighMemDxe/HighMemDxe.inf
+INF  OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
 
 #
 # PI DXE Drivers producing Architectural Protocols (EFI Services)

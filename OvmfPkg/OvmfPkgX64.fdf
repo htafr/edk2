@@ -408,6 +408,10 @@ INF OvmfPkg/Tcg/TdTcg2Dxe/TdTcg2Dxe.inf
 !include OvmfPkg/Include/Fdf/MorLock.fdf.inc
 !include OvmfPkg/Include/Fdf/OvmfRngDxe.fdf.inc
 
+!if $(LIBSPDM_ENABLE)
+  INF  OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
+!endif
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]

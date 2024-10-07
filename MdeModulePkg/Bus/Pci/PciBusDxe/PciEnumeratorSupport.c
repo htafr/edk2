@@ -307,6 +307,8 @@ PciSearchDevice (
     ResetPowerManagementFeature (PciIoDevice);
   }
 
+  ProbeDoeSupport (PciIoDevice);
+
   //
   // Insert it into a global tree for future reference
   //
@@ -2108,6 +2110,19 @@ AuthenticatePciDevice (
       return Status;
     }
 
+    Status = ProbeDoeSupport (PciIoDevice);
+    if (Status == EFI_SUCCESS) {
+      Status = gBS->InstallProtocolInterface (
+                      &DeviceIdentifier.DeviceHandle,
+                      &gEdkiiPciDoeProtocol,
+                      EFI_NATIVE_INTERFACE,
+                      &PciIoDevice->PciDoe
+                      );
+      if (EFI_ERROR (Status)) {
+        goto UninstallProtocols;
+      }
+    }
+
     //
     // Do DeviceAuthentication
     //
@@ -2116,6 +2131,14 @@ AuthenticatePciDevice (
     // Always uninstall, because they are only for Authentication.
     // No need to check return Status.
     //
+
+    gBS->UninstallProtocolInterface (
+           DeviceIdentifier.DeviceHandle,
+           &gEdkiiPciDoeProtocol,
+           &PciIoDevice->PciDoe
+           );
+
+UninstallProtocols:
     gBS->UninstallMultipleProtocolInterfaces (
            DeviceIdentifier.DeviceHandle,
            &gEfiDevicePathProtocolGuid,
@@ -2124,6 +2147,7 @@ AuthenticatePciDevice (
            &PciIoDevice->PciIo,
            NULL
            );
+
     return Status;
   }
 
@@ -2176,9 +2200,9 @@ CreatePciIoDevice (
   IN UINT8          Func
   )
 {
-  PCI_IO_DEVICE        *PciIoDevice;
-  EFI_PCI_IO_PROTOCOL  *PciIo;
-  EFI_STATUS           Status;
+  PCI_IO_DEVICE          *PciIoDevice;
+  EFI_PCI_IO_PROTOCOL    *PciIo;
+  EFI_STATUS             Status;
 
   PciIoDevice = AllocateZeroPool (sizeof (PCI_IO_DEVICE));
   if (PciIoDevice == NULL) {

@@ -80,6 +80,9 @@
 !endif
 !endif
 
+  DEFINE LIBSPDM_ENABLE          = TRUE
+  DEFINE DEBUG_ON_SERIAL_PORT    = TRUE
+
   #
   # Define the FILE_GUID of CpuMpPei/CpuDxe for unique-processor version.
   #
@@ -101,6 +104,9 @@
   INTEL:*_*_X64_GENFW_FLAGS = --keepexceptiontable
 !endif
   RELEASE_*_*_GENFW_FLAGS = --zero
+!ifdef $(LIBSPDM_ENABLE)
+  GCC:*_*_*_CC_FLAGS                 = -DLIBSPDM_ENABLE=1
+!endif
 
   #
   # Disable deprecated APIs.
@@ -267,6 +273,8 @@
   SmbusLib|MdePkg/Library/BaseSmbusLibNull/BaseSmbusLibNull.inf
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
 
+!if $(LIBSPDM_ENABLE)
+  SpdmSecurityLib|SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
   SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmDeviceSecretLibNull.inf
   SpdmCryptLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCryptLib.inf
   SpdmCommonLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCommonLib.inf
@@ -280,6 +288,7 @@
   CryptlibWrapper|SecurityPkg/DeviceSecurity/OsStub/CryptlibWrapper/CryptlibWrapper.inf
   PlatformLibWrapper|SecurityPkg/DeviceSecurity/OsStub/PlatformLibWrapper/PlatformLibWrapper.inf
   MemLibWrapper|SecurityPkg/DeviceSecurity/OsStub/MemLibWrapper/MemLibWrapper.inf
+!endif
 
 !include OvmfPkg/Include/Dsc/OvmfTpmLibs.dsc.inc
 !include OvmfPkg/Include/Dsc/ShellLibs.dsc.inc
@@ -924,6 +933,10 @@
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+
+!if $(LIBSPDM_ENABLE)
+  OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
+!endif
 
   OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf
   OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf

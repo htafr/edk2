@@ -27,23 +27,7 @@
 #include <Library/UefiLib.h>
 #include <Library/VirtioLib.h>
 
-#include <hal/base.h>
-#include <library/spdm_return_status.h>
-#include <library/spdm_lib_config.h>
-#include <Stub/SpdmLibStub.h>
-#include <Library/SpdmSecurityLib.h>
-
 #include "VirtioBlk.h"
-#include "VirtioBlkSpdm.h"
-
-LIST_ENTRY  mSpdmDeviceList = INITIALIZE_LIST_HEAD_VARIABLE (mSpdmDeviceList);
-
-EDKII_DEVICE_SECURITY_POLICY_PROTOCOL  *mDeviceSecurityPolicy;
-
-BOOLEAN  mSendReceiveBufferAcquired = FALSE;
-UINT8    mSendReceiveBuffer[LIBSPDM_MAX_MESSAGE_BUFFER_SIZE];
-UINTN    mSendReceiveBufferSize;
-VOID     *mScratchBuffer;
 
 /**
 
@@ -253,8 +237,7 @@ SynchronousRequest (
   IN              EFI_LBA   Lba,
   IN              UINTN     BufferSize,
   IN OUT volatile VOID      *Buffer,
-  IN              BOOLEAN   RequestIsWrite,
-  IN              BOOLEAN   RequestIsSpdm
+  IN              BOOLEAN   RequestIsWrite
   )
 {
   UINT32                   BlockSize;
@@ -301,9 +284,8 @@ SynchronousRequest (
   // IO Priority is homogeneously 0.
   //
   Request->Type = RequestIsWrite ?
-                 (BufferSize == 0 ? VIRTIO_BLK_T_FLUSH : VIRTIO_BLK_T_OUT) :
-                 VIRTIO_BLK_T_IN;
-  if (RequestIsSpdm) Request->Type &= VIRTIO_BLK_T_SPDM;
+                  (BufferSize == 0 ? VIRTIO_BLK_T_FLUSH : VIRTIO_BLK_T_OUT) :
+                  VIRTIO_BLK_T_IN;
   Request->IoPrio = 0;
   Request->Sector = MultU64x32 (Lba, BlockSize / 512);
 
@@ -535,8 +517,7 @@ VirtioBlkReadBlocks (
            Lba,
            BufferSize,
            Buffer,
-           FALSE,       // RequestIsWrite
-           FALSE
+           FALSE       // RequestIsWrite
            );
 }
 
@@ -590,8 +571,7 @@ VirtioBlkWriteBlocks (
            Lba,
            BufferSize,
            Buffer,
-           TRUE,        // RequestIsWrite
-           FALSE
+           TRUE        // RequestIsWrite
            );
 }
 
@@ -626,414 +606,9 @@ VirtioBlkFlushBlocks (
            0,      // Lba
            0,      // BufferSize
            NULL,   // Buffer
-           TRUE,   // RequestIsWrite
-           FALSE
+           TRUE    // RequestIsWrite
            ) :
          EFI_SUCCESS;
-}
-
-/**
-  Record an SPDM device into device list.
-
-  @param[in]  SpdmContext       The SPDM context for the device.
-**/
-VOID
-RecordSpdmDeviceInList (
-  IN SPDM_DRIVER_DEVICE_CONTEXT  *SpdmDriverContext
-  )
-{
-  SPDM_DEVICE_INSTANCE  *NewSpdmDevice;
-  LIST_ENTRY            *SpdmDeviceList;
-
-  SpdmDeviceList = &mSpdmDeviceList;
-
-  NewSpdmDevice = AllocateZeroPool (sizeof (*NewSpdmDevice));
-  if (NewSpdmDevice == NULL) {
-    ASSERT (NewSpdmDevice != NULL);
-    return;
-  }
-
-  NewSpdmDevice->Signature         = SPDM_DEVICE_INSTANCE_SIGNATURE;
-  NewSpdmDevice->SpdmDriverContext = SpdmDriverContext;
-
-  InsertTailList (SpdmDeviceList, &NewSpdmDevice->Link);
-}
-
-SPDM_RETURN
-VirtioBlkSpdmSendMessage (
-  IN VOID            *SpdmContext,
-  IN UINTN           MessageSize,
-  IN OUT CONST VOID  *Message,
-  IN UINT64          Timeout
-  )
-{
-  VBLK_DEV   *Dev;
-  EFI_LBA    Lba;
-  EFI_STATUS Status;
-  VOID*      Buffer;
-
-  Lba = 0;
-
-  if (MessageSize == 0) {
-    return LIBSPDM_STATUS_SUCCESS;
-  }
-
-  Buffer = AllocateZeroPool (MessageSize);
-  CopyMem(Buffer, Message, MessageSize);
-
-  // WARN: when verifying the blocksize may lead to an error
-  Dev = VIRTIO_BLK_FROM_SPDM_CONTEXT (SpdmContext);
-  Status = VerifyReadWriteRequest (
-            &Dev->BlockIoMedia,
-            Lba,
-            MessageSize,
-            TRUE
-            );
-  if (EFI_ERROR (Status)) {
-    return LIBSPDM_STATUS_SEND_FAIL;
-  }
-
-  Status = SynchronousRequest (
-            Dev,
-            Lba,
-            MessageSize,
-            Buffer,
-            TRUE,       // RequestIsWrite
-            TRUE
-            );
-  if (EFI_ERROR (Status)) {
-    return LIBSPDM_STATUS_SEND_FAIL;
-  }
-
-  return LIBSPDM_STATUS_SUCCESS;
-}
-
-SPDM_RETURN
-VirtioBlkSpdmReceiveMessage (
-  IN     VOID    *SpdmContext,
-  IN OUT UINTN   *MessageSize,
-  IN OUT VOID    **Message,
-  IN     UINT64  Timeout
-  )
-{
-  VBLK_DEV    *Dev;
-  EFI_LBA     Lba;
-  EFI_STATUS  Status;
-
-  if (*MessageSize == 0) {
-    return EFI_SUCCESS;
-  }
-
-  Dev = VIRTIO_BLK_FROM_SPDM_CONTEXT (SpdmContext);
-  Status = VerifyReadWriteRequest (
-             &Dev->BlockIoMedia,
-             Lba,
-             *MessageSize,
-             FALSE               // RequestIsWrite
-             );
-  if (EFI_ERROR (Status)) {
-    return LIBSPDM_STATUS_RECEIVE_FAIL;
-  }
-
-  Status = SynchronousRequest (
-            Dev,
-            Lba,
-            *MessageSize,
-            *Message,
-            FALSE,       // RequestIsWrite
-            TRUE
-            );
-  if (EFI_ERROR (Status)) {
-    return LIBSPDM_STATUS_RECEIVE_FAIL;
-  }
-
-  return LIBSPDM_STATUS_SUCCESS;
-}
-
-SPDM_RETURN
-SpdmDeviceAcquireSenderBuffer (
-  VOID   *Context,
-  VOID   **MsgBufPtr
-  )
-{
-  ASSERT (!mSendReceiveBufferAcquired);
-  *MsgBufPtr  = mSendReceiveBuffer;
-  ZeroMem (mSendReceiveBuffer, sizeof (mSendReceiveBuffer));
-  mSendReceiveBufferAcquired = TRUE;
-
-  return LIBSPDM_STATUS_SUCCESS;
-}
-
-VOID
-SpdmDeviceReleaseSenderBuffer (
-  VOID        *Context,
-  CONST VOID  *MsgBufPtr
-  )
-{
-  ASSERT (mSendReceiveBufferAcquired);
-  ASSERT (MsgBufPtr == mSendReceiveBuffer);
-  mSendReceiveBufferAcquired = FALSE;
-
-  return;
-}
-
-SPDM_RETURN
-SpdmDeviceAcquireReceiverBuffer (
-  VOID   *Context,
-  VOID   **MsgBufPtr
-  )
-{
-  ASSERT (!mSendReceiveBufferAcquired);
-  *MsgBufPtr  = mSendReceiveBuffer;
-  ZeroMem (mSendReceiveBuffer, sizeof (mSendReceiveBuffer));
-  mSendReceiveBufferAcquired = TRUE;
-
-  return LIBSPDM_STATUS_SUCCESS;
-}
-
-VOID
-SpdmDeviceReleaseReceiverBuffer (
-  VOID        *context,
-  CONST VOID  *MsgBufPtr
-  )
-{
-  ASSERT (mSendReceiveBufferAcquired);
-  ASSERT (MsgBufPtr == mSendReceiveBuffer);
-  mSendReceiveBufferAcquired = FALSE;
-
-  return;
-}
-
-/**
-  This function creates the SPDM device contenxt.
-
-  @param[in]  DeviceId               The Identifier for the device.
-
-  @return SPDM device context
-**/
-SPDM_DRIVER_DEVICE_CONTEXT *
-CreateSpdmDriverContext (
-  IN EDKII_DEVICE_IDENTIFIER  *DeviceId
-  )
-{
-  SPDM_DRIVER_DEVICE_CONTEXT  *SpdmDriverContext;
-  VOID                        *SpdmContext;
-  EFI_STATUS                  Status;
-  VOID                        *Data;
-  UINTN                       DataSize;
-  SPDM_DATA_PARAMETER         Parameter;
-  UINTN                       ScratchBufferSize;
-  /*
-  BOOLEAN                     HasRspPubCert;
-  SPDM_RETURN                 SpdmReturn;
-  UINT8                       Data8;
-  UINT16                      Data16;
-  UINT32                      Data32;
-  BOOLEAN                     IsRequester;
-  */
-
-  SpdmDriverContext = AllocateZeroPool (sizeof (*SpdmDriverContext));
-  if (SpdmDriverContext == NULL) {
-    ASSERT (SpdmDriverContext != NULL);
-    return NULL;
-  }
-
-  SpdmContext = AllocateZeroPool (SpdmGetContextSize ());
-  if (SpdmContext == NULL) {
-    ASSERT (SpdmContext != NULL);
-    FreePool (SpdmDriverContext);
-    return NULL;
-  }
-
-  SpdmInitContext (SpdmContext);
-
-  ScratchBufferSize = SpdmGetSizeofRequiredScratchBuffer (SpdmContext);
-  mScratchBuffer    = AllocateZeroPool (ScratchBufferSize);
-  ASSERT (mScratchBuffer != NULL);
-
-  SpdmRegisterDeviceIoFunc (SpdmContext, VirtioBlkSpdmSendMessage, VirtioBlkSpdmReceiveMessage);
-  SpdmRegisterTransportLayerFunc (
-    SpdmContext,
-    LIBSPDM_MAX_SPDM_MSG_SIZE,
-    LIBSPDM_TRANSPORT_HEADER_SIZE,
-    LIBSPDM_TRANSPORT_TAIL_SIZE,
-    SpdmTransportMctpEncodeMessage,
-    SpdmTransportMctpDecodeMessage
-    );
-  /*
-  SpdmRegisterTransportLayerFunc (
-    SpdmContext,
-    SpdmTransportPciDoeEncodeMessage,
-    SpdmTransportPciDoeDecodeMessage,
-    SpdmTransportPciDoeGetHeaderSize
-    );
-  */
-  SpdmRegisterDeviceBufferFunc (
-    SpdmContext,
-    LIBSPDM_SENDER_BUFFER_SIZE,
-    LIBSPDM_RECEIVER_BUFFER_SIZE,
-    SpdmDeviceAcquireSenderBuffer,
-    SpdmDeviceReleaseSenderBuffer,
-    SpdmDeviceAcquireReceiverBuffer,
-    SpdmDeviceReleaseReceiverBuffer
-    );
-  SpdmSetScratchBuffer (SpdmContext, mScratchBuffer, ScratchBufferSize);
-
-  SpdmDriverContext->SpdmContext = SpdmContext;
-
-  SpdmDriverContext->Signature = SPDM_DRIVER_DEVICE_CONTEXT_SIGNATURE;
-  CopyMem (&SpdmDriverContext->DeviceId, DeviceId, sizeof (*DeviceId));
-
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &gSpdmIoProtocolGuid,
-                  (VOID **)&SpdmDriverContext->SpdmIoProtocol
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Locate - SpdmIoProtocol - %r\n", Status));
-    goto Error;
-  }
-
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &gSpdmProtocolGuid,
-                  (VOID **)&SpdmDriverContext->SpdmProtocol
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Locate - SpdmProtocol - %r\n", Status));
-    goto Error;
-  }
-
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &gEfiDevicePathProtocolGuid,
-                  (VOID **)&SpdmDriverContext->DevicePath
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Locate - DevicePath - %r\n", Status));
-    goto Error;
-  }
-
-  #define SPDM_UID  1// TBD - hardcoded
-  SpdmDriverContext->DeviceUID = SPDM_UID;
-
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &DeviceId->DeviceType,
-                  (VOID **)&SpdmDriverContext->DeviceIo
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Locate - DeviceIo - %r\n", Status));
-    // This is optional, only check known device type later.
-  }
-
-  if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid) ||
-      CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid))
-  {
-    if (SpdmDriverContext->DeviceIo == NULL) {
-      DEBUG ((DEBUG_ERROR, "Locate - PciIo - %r\n", Status));
-      goto Error;
-    }
-  }
-
-  //
-  // Record list before any transaction
-  //
-  RecordSpdmDeviceInList (SpdmDriverContext);
-
-
-
-  Status = GetVariable2 (
-             L"ProvisionSpdmCertChain",
-             &gEfiDeviceSecurityPkgTestConfig,
-             &Data,
-             &DataSize
-             );
-  if (!EFI_ERROR (Status)) {
-    //HasRspPubCert = TRUE;
-    ZeroMem (&Parameter, sizeof (Parameter));
-    Parameter.location = SpdmDataLocationLocal;
-    SpdmSetData (SpdmContext, SpdmDataLocalPublicCertChain, &Parameter, Data, DataSize);
-    // Do not free it.
-  } else {
-    //HasRspPubCert = FALSE;
-  }
-
-  CHAR8 Message[5] = {0x05, 0x10, 0x84, 0x00, 0x00};
-  VirtioBlkSpdmSendMessage (SpdmContext, sizeof (Message), &Message, 10);
-
-  /*
-  Data8 = 0;
-  ZeroMem (&Parameter, sizeof (Parameter));
-  Parameter.location = SpdmDataLocationLocal;
-  SpdmSetData (SpdmContext, SpdmDataCapabilityCTExponent, &Parameter, &Data8, sizeof (Data8));
-
-  Data32 = 0 |
-           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CERT_CAP |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CHAL_CAP |
-           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_ENCRYPT_CAP |
-           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MAC_CAP |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MUT_AUTH_CAP |
-#if (LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP) || (LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)
-           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_KEY_EX_CAP |
-#endif
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PSK_CAP_REQUESTER |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_ENCAP_CAP |
-           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HBEAT_CAP |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_KEY_UPD_CAP |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_HANDSHAKE_IN_THE_CLEAR_CAP |
-           //           SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PUB_KEY_ID_CAP |
-           0;
-  if (!HasRspPubCert) {
-    Data32 &= ~SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CHAL_CAP;
-  } else {
-    Data32 |= SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CHAL_CAP;
-  }
-
-  SpdmSetData (SpdmContext, SpdmDataCapabilityFlags, &Parameter, &Data32, sizeof (Data32));
-
-  Data8 = SPDM_MEASUREMENT_BLOCK_HEADER_SPECIFICATION_DMTF;
-  SpdmSetData (SpdmContext, SpdmDataMeasurementSpec, &Parameter, &Data8, sizeof (Data8));
-  Data32 = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_2048 |
-           SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_3072 |
-           SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_4096 |
-           SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P256 |
-           SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384 |
-           SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P521;
-  SpdmSetData (SpdmContext, SpdmDataBaseAsymAlgo, &Parameter, &Data32, sizeof (Data32));
-  Data32 = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_256 |
-           SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384 |
-           SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_512;
-  SpdmSetData (SpdmContext, SpdmDataBaseHashAlgo, &Parameter, &Data32, sizeof (Data32));
-  Data16 = SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_256_R1 |
-           SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_384_R1 |
-           SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_521_R1;
-  SpdmSetData (SpdmContext, SpdmDataDHENamedGroup, &Parameter, &Data16, sizeof (Data16));
-  Data16 = SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_128_GCM |
-           SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_256_GCM |
-           SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_CHACHA20_POLY1305;
-  SpdmSetData (SpdmContext, SpdmDataAEADCipherSuite, &Parameter, &Data16, sizeof (Data16));
-  Data16 = SPDM_ALGORITHMS_KEY_SCHEDULE_HMAC_HASH;
-  SpdmSetData (SpdmContext, SpdmDataKeySchedule, &Parameter, &Data16, sizeof (Data16));
-  Data8 = SPDM_ALGORITHMS_OPAQUE_DATA_FORMAT_1;
-  SpdmSetData (SpdmContext, SpdmDataOtherParamsSsupport, &Parameter, &Data8, sizeof (Data8));
-  IsRequrester = TRUE;
-  SpdmReturn = SpdmSetData (SpdmContext, LIBSPDM_DATA_IS_REQUESTER, &Parameter, &IsRequrester, sizeof (IsRequrester));
-  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
-    goto Error;
-  }
-
-  SpdmReturn = SpdmInitConnection (SpdmContext, FALSE);
-  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
-    DEBUG ((DEBUG_ERROR, "SpdmInitConnection - %p\n", SpdmReturn));
-    goto Error;
-  }
-  */
-
-  return SpdmDriverContext;
-Error:
-  FreePool (SpdmDriverContext);
-  return NULL;
 }
 
 /**

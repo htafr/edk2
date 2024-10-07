@@ -301,6 +301,7 @@ typedef
 
 typedef struct {
   UINT32                     Version;
+  UINT32                     SecuredMessageVersion;
   //
   // DeviceType is used to create TCG event log context_data.
   // DeviceHandle is used to create TCG event log device_path information.
@@ -386,7 +387,12 @@ typedef struct {
   // If it is zero, then the SpdmSecurityLib will set the default value.
   //
   UINT32                                      BaseHashAlgo;
+  UINT32                                      MeasurementHashAlgo;
   UINT32                                      BaseAsymAlgo;
+  UINT16                                      DheAlgo;
+  UINT16                                      AeadAlgo;
+  UINT16                                      ReqBaseAsymAlgo;
+  UINT16                                      KeyScheduleAlgo;
 
   //
   // transfer size
@@ -396,6 +402,24 @@ typedef struct {
   UINT32                                      TransportTailSize;
   UINT32                                      SenderBufferSize;
   UINT32                                      ReceiverBufferSize;
+
+  //
+  // Capabilities
+  //
+  UINT32                                      TransportLayer;
+  UINT32                                      RequesterCapabilityFlags;
+  UINT32                                      CapabilityFlags;
+  UINT32                                      PeerCapabilityFlags;
+  UINT8                                       BasicMutAuth;
+  UINT8                                       MutAuth;
+  UINT8                                       MeasurementSpec;
+  UINT8                                       MeasurementSummaryHashType;
+  UINT8                                       MeasurementOperation;
+  UINT8                                       MeasurementAttribute;
+  UINT8                                       SlotId;
+  UINT8                                       SlotCount;
+  UINT8                                       OtherParamsSupport;
+  UINT8                                       MelSpec;
 
   EFI_GUID                                    *SpdmIoProtocolGuid;
 } EDKII_SPDM_DEVICE_INFO;

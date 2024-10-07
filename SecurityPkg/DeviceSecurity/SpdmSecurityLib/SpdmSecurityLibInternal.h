@@ -35,6 +35,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/ImageAuthentication.h>
 
 #include <Protocol/PciIo.h>
+#include <Protocol/Spdm.h>
 #include <Library/SpdmSecurityLib.h>
 #include "library/spdm_crypt_lib.h"
 
@@ -55,6 +56,7 @@ typedef struct {
   VOID                        *ScratchBuffer;
   UINT8                       SpdmVersion;
   VOID                        *SpdmIoProtocol;
+  VOID                        *SpdmProtocol;
   EFI_SIGNATURE_LIST          *SignatureList;
   UINTN                       SignatureListSize;
 } SPDM_DEVICE_CONTEXT;
@@ -67,6 +69,35 @@ typedef struct {
 
 #define SPDM_DEVICE_CONTEXT_INSTANCE_SIGNATURE  SIGNATURE_32 ('S', 'D', 'C', 'S')
 #define SPDM_DEVICE_CONTEXT_INSTANCE_FROM_LINK(a)  CR (a, SPDM_DEVICE_CONTEXT_INSTANCE, Link, SPDM_DEVICE_CONTEXT_INSTANCE_SIGNATURE)
+
+/**
+
+  Return the SPDM device via SPDM protocol
+
+  @param[in] Spdm    The SPDM protocol instance
+
+  @return The SPDM device context
+
+**/
+SPDM_DEVICE_CONTEXT *
+EFIAPI
+GetSpdmDeviceContextViaSpdmProtocol (
+  IN SPDM_PROTOCOL  *SpdmProtocol
+  );
+
+/**
+  Return the SPDM device via SPDM protocol
+
+  @param[in] DeviceId    The Identifier for the device
+
+  @return The SPDM device context
+
+**/
+SPDM_DEVICE_CONTEXT *
+EFIAPI
+GetSpdmDeviceContextViaDeviceId (
+  IN EDKII_DEVICE_IDENTIFIER *DeviceId
+  );
 
 VOID *
 EFIAPI
