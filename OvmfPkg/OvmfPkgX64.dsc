@@ -31,7 +31,7 @@
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE
   #
-  DEFINE SECURE_BOOT_ENABLE      = FALSE
+  DEFINE SECURE_BOOT_ENABLE      = TRUE
   DEFINE SMM_REQUIRE             = FALSE
   DEFINE SOURCE_DEBUG_ENABLE     = FALSE
   DEFINE CC_MEASUREMENT_ENABLE   = TRUE
@@ -41,7 +41,7 @@
   #
   # Shell can be useful for debugging but should not be enabled for production
   #
-  DEFINE BUILD_SHELL             = TRUE
+  DEFINE BUILD_SHELL             = FALSE
 
   #
   # Network definition
@@ -935,6 +935,7 @@
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 
 !if $(LIBSPDM_ENABLE)
+  OvmfPkg/DeployCert/DeployCert.inf
   OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
 !endif
 

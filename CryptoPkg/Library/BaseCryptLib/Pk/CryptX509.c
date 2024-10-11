@@ -704,11 +704,6 @@ X509VerifyCert (
   Status = X509ConstructCertificate (Cert, CertSize, (UINT8 **)&X509Cert);
   if ((X509Cert == NULL) || (!Status)) {
     Status = FALSE;
-    DEBUG ((
-      DEBUG_INFO,
-      "[EDKII @ %a] Status - %d\n",
-      __func__, (UINT32)Status
-      ));
     goto _Exit;
   }
 
@@ -1732,14 +1727,6 @@ X509VerifyCertChain (
   CurrentCert    = CertChain;
   Length         = 0;
   CurrentCertLen = 0;
-
-  DEBUG ((DEBUG_INFO,
-         "[EDKII @ %a]:\n"
-         ,
-         __func__));
-  for (UINTN i = 0 ; i < CertChainLength; i++)
-    DEBUG ((DEBUG_INFO, "%02X ", CertChain[i]));
-  DEBUG ((DEBUG_INFO, "\n"));
 
   VerifyFlag = FALSE;
   while (TRUE) {

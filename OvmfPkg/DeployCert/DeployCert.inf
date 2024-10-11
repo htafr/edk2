@@ -1,0 +1,52 @@
+## @file
+#  EDKII DeployCert
+#
+# Copyright (c) 2020, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DeployCert
+  FILE_GUID                      = 73774DF9-BADC-4611-AA41-B12AE468B27C
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MainEntryPoint
+
+[Sources]
+  DeployCert.c
+  TestRootCer.c
+  TestRootKey.c
+  EccTestRootCer.c
+  EccTestRootKey.c
+
+[Packages]
+  OvmfPkg/OvmfPkg.dec
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  SecurityPkg/SecurityPkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  UefiRuntimeServicesTableLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  MemoryAllocationLib
+  DevicePathLib
+  BaseMemoryLib
+  PrintLib
+  DebugLib
+  BaseCryptLib
+  TpmMeasurementLib
+  Tpm2CommandLib
+
+[Guids]
+  gEfiDeviceSignatureDatabaseGuid         ## PRODUCES
+  gEfiCertX509Guid
+  gEfiDeviceSecurityConfig                ## PRODUCES
+  gEfiCertSha256Guid
+
+[Depex]
+  gEfiVariableWriteArchProtocolGuid

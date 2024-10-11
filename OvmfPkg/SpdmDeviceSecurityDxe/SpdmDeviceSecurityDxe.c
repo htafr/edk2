@@ -326,7 +326,7 @@ DeviceAuthentication (
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MULTI_KEY_CAP_NEG |
                                               0);
   SpdmDeviceInfo.CapabilityFlags            = 0;
-  SpdmDeviceInfo.BasicMutAuth               = 1;
+  SpdmDeviceInfo.BasicMutAuth               = 0;
   SpdmDeviceInfo.MutAuth                    = SPDM_KEY_EXCHANGE_RESPONSE_MUT_AUTH_REQUESTED_WITH_ENCAP_REQUEST;
   SpdmDeviceInfo.MeasurementSummaryHashType = SPDM_CHALLENGE_REQUEST_ALL_MEASUREMENTS_HASH;
   SpdmDeviceInfo.MeasurementOperation       = SPDM_GET_MEASUREMENTS_REQUEST_MEASUREMENT_OPERATION_TOTAL_NUMBER_OF_MEASUREMENTS;
@@ -406,10 +406,6 @@ DeviceAuthentication (
 #if (LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP) || (LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)
   SpdmDeviceContext = GetSpdmDeviceContextViaDeviceId (DeviceId);
   if (SpdmDeviceContext == NULL) {
-    SpdmDeviceContext = CreateSpdmDeviceContext (&SpdmDeviceInfo, &DeviceSecurityState);
-  }
-
-  if (SpdmDeviceContext == NULL) {
     Status = EFI_UNSUPPORTED;
     goto UninstallProtocol;
   }
@@ -457,9 +453,6 @@ SpdmDeviceSecurityEntryPoint (
   EFI_PCI_IO_PROTOCOL                   *PciIo                        = NULL;
   UINT32                                DoeCapOffset                  = 0;
   SPDM_PRIVATE_DATA                     *SpdmPrivateData              = NULL;
-
-  DEBUG ((DEBUG_INFO, "[EDKII @ %a] INSTALLING SPDM PROTOCOLS\n", __func__));
-
 
   /* Locate EFI_PCI_IO_PROTOCOL */
   /*

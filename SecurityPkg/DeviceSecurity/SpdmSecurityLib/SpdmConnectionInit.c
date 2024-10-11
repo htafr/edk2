@@ -380,7 +380,6 @@ CreateSpdmDeviceContext (
              &SpdmDeviceContext->SignatureListSize
              );
 
-  DEBUG ((DEBUG_INFO, "[EDKII @ %a]: SpdmDeviceContext->SignatureListSize - 0x%X\n\n\n", __func__, SpdmDeviceContext->SignatureListSize));
   if ((!EFI_ERROR (Status)) && (SpdmDeviceContext->SignatureList != NULL)) {
     DbList = SpdmDeviceContext->SignatureList;
     DbSize = SpdmDeviceContext->SignatureListSize;
@@ -406,6 +405,7 @@ CreateSpdmDeviceContext (
         Data     = Cert->SignatureData;
         DataSize = DbList->SignatureSize - sizeof (EFI_GUID);
 
+        /*
         DEBUG ((DEBUG_INFO,
               "[EDKII @ %a]:\n"
               ,
@@ -413,6 +413,7 @@ CreateSpdmDeviceContext (
         for (UINTN i = 0 ; i < DataSize; i++)
           DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)Data)[i]));
         DEBUG ((DEBUG_INFO, "\n"));
+        //*/
 
         ZeroMem (&Parameter, sizeof (Parameter));
         Parameter.location = SpdmDataLocationLocal;
@@ -622,6 +623,19 @@ CreateSpdmDeviceContext (
   }
 
   SpdmDeviceContext->SpdmVersion = (Data16 >> SPDM_VERSION_NUMBER_SHIFT_BIT);
+
+  Status = GetVariable2 (
+             L"RequesterSpdmCertChain",
+             &gEfiDeviceSecurityConfig,
+             (VOID **)&Data,
+             &DataSize
+             );
+  ZeroMem (&Parameter, sizeof (Parameter));
+  Parameter.location = SpdmDataLocationLocal;
+  for (UINTN idx = 0 ; idx < SpdmDeviceInfo->SlotCount ; idx++) {
+    Parameter.additional_data[0] = idx;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalPublicCertChain, &Parameter, Data, DataSize);
+  }
 
   return SpdmDeviceContext;
 Error:
