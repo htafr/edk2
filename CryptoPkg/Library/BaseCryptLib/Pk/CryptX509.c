@@ -102,6 +102,7 @@ X509ConstructCertificateStackV (
 
   STACK_OF (X509)  *CertStack;
   BOOLEAN  Status;
+  UINTN    Index;
 
   //
   // Check input parameters.
@@ -123,7 +124,7 @@ X509ConstructCertificateStackV (
     }
   }
 
-  while (TRUE) {
+  for (Index = 0; ; Index++) {
     //
     // If Cert is NULL, then it is the end of the list.
     //

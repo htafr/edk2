@@ -50,6 +50,7 @@
   CryptlibWrapper
 
 [Guids]
+  gEfiGlobalVariableGuid                  ## PRODUCES ## Variable:L"devAuthBoot"
   gEfiDeviceSignatureDatabaseGuid         ## CONSUMES
 
 [Protocols]
@@ -63,12 +64,5 @@
   gEdkiiDeviceIdentifierTypeUsbGuid       ## CONSUMES
   gEfiPciIoProtocolGuid                   ## CONSUMES
 
-#[Pcd]
-#  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmBaseAsymAlgo     ## COMSUMES
-#  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmBaseHashAlgo     ## COMSUMES
-#  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmDHENamedGroup    ## COMSUMES
-#  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmAEADCipherSuite  ## COMSUMES
-#  gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmKeySchedule      ## COMSUMES
-
 [Depex]
-  TRUE
+  gEfiVariableWriteArchProtocolGuid

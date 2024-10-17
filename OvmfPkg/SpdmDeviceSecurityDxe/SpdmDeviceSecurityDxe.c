@@ -447,46 +447,19 @@ SpdmDeviceSecurityEntryPoint (
   IN EFI_SYSTEM_TABLE *SystemTable
   )
 {
-  EFI_HANDLE                            Handle;
-  EFI_STATUS                            Status;
-  //UINTN                                 BufferSize;
-  EFI_PCI_IO_PROTOCOL                   *PciIo                        = NULL;
-  UINT32                                DoeCapOffset                  = 0;
-  SPDM_PRIVATE_DATA                     *SpdmPrivateData              = NULL;
+  EFI_HANDLE Handle;
+  EFI_STATUS Status;
+  UINT8      AuthBootMode = 1;
 
-  /* Locate EFI_PCI_IO_PROTOCOL */
-  /*
-  InitializeSpdmIoStub ();
-
-  BufferSize = sizeof (Handle);
-  Status     = gBS->LocateHandle (
-                      ByProtocol,
-                      &gEdkiiDeviceIdentifierTypePciGuid,
-                      NULL,
-                      &BufferSize,
-                      &Handle
-                      );
-  ASSERT_EFI_ERROR (Status);
-
-  Status = gBS->HandleProtocol (
-                  Handle,
-                  &gEdkiiDeviceIdentifierTypePciGuid,
-                  (VOID **)&PciIo
+  Status = gRT->SetVariable (
+                  EFI_DEVICE_AUTH_BOOT_MODE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  EFI_VARIABLE_NON_VOLATILE |
+                  EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                  EFI_VARIABLE_RUNTIME_ACCESS,
+                  sizeof (UINT8),
+                  &AuthBootMode
                   );
-  ASSERT_EFI_ERROR (Status);
-
-  Status = LocatePcieDoeCapStructure (PciIo, &DoeCapOffset);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-  //*/
-
-  /* Initialize SpdmPrivateData */
-  SpdmPrivateData = AllocateZeroPool (sizeof (SPDM_PRIVATE_DATA));
-  SpdmPrivateData->SpdmIo.SendMessage    = SpdmIoSendRequest;
-  SpdmPrivateData->SpdmIo.ReceiveMessage = SpdmIoReceiveResponse;
-  SpdmPrivateData->PciIo                 = PciIo;
-  SpdmPrivateData->DoeCapabilityOffset   = DoeCapOffset;
 
   Handle = NULL;
   Status = gBS->InstallMultipleProtocolInterfaces (

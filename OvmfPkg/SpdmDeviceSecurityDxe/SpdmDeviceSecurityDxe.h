@@ -73,8 +73,6 @@
 #define LIBSPDM_MAX_SPDM_MSG_SIZE 0x1200
 #endif
 
-typedef struct _SPDM_PRIVATE_DATA SPDM_PRIVATE_DATA;
-
 EFI_STATUS
 EFIAPI
 InitializeSpdmIoStub (
@@ -165,15 +163,5 @@ EFIAPI
 UninstallSpdmIoProtocol (
   EFI_HANDLE *Handle
   );
-
-struct _SPDM_PRIVATE_DATA {
-  UINTN               Signature;
-  SPDM_IO_PROTOCOL    SpdmIo;
-  EFI_PCI_IO_PROTOCOL *PciIo;
-  UINT32              DoeCapabilityOffset;
-};
-
-#define SPDM_PRIVATE_DATA_SIGNATURE SIGNATURE_32('S', 'P', 'D', 'S')
-#define SPDM_PRIVATE_DATA_FROM_SPDM_IO(a) CR (a, SPDM_PRIVATE_DATA, SpdmIo, SPDM_PRIVATE_DATA_SIGNATURE)
 
 #endif

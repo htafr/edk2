@@ -323,121 +323,108 @@ MainEntryPoint (
   UINTN               DbSize;
   UINT8               *RootCert;
   UINTN               RootCertSize;
-  UINT8               TestConfig;
   UINTN               HashSize;
   UINT8               *RootKey;
   UINTN               RootKeySize;
 
-  TestConfig = TEST_CONFIG_MULTIPLE_CERT_IN_DB;
-
   DEBUG ((DEBUG_INFO, "[EDKII @ %a]: Deploying certificates...\n", __func__));
 
-  //*
-  Status = gRT->SetVariable (
-                  L"SpdmTestConfig",
-                  &gEfiDeviceSecurityConfig,
-                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-                  sizeof (UINT8),
-                  &TestConfig
-                  );
-  //*/
+  CertChain     = RequesterPublicCertificateChainData;
+  CertChainSize = RequesterPublicCertificateChainDataSize;
+  HashSize      = SHA384_HASH_SIZE;
+  RootKey       = TestRootKey;
+  RootKeySize   = TestRootKeySize;
+  RootCert      = ResponderPublicCertificateChainHash;
+  RootCertSize  = ResponderPublicCertificateChainHashSize;
 
-    CertChain     = RequesterPublicCertificateChainData;
-    CertChainSize = RequesterPublicCertificateChainDataSize;
-    HashSize      = SHA384_HASH_SIZE;
-    RootKey       = TestRootKey;
-    RootKeySize   = TestRootKeySize;
-    RootCert = ResponderPublicCertificateChainHash;
-    RootCertSize = ResponderPublicCertificateChainHashSize;
-
-    //
-    // In this test config, The database has two signature lists.
-    // The first one contains two siganture data for two root certs.
-    // The second one contains one signature data for one root cert
-    // which matches the cert chain of the responder.
-    //
-    SignatureHeaderSize = 0;
-    DbSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
-    DbList        = AllocateZeroPool (DbSize);
-    ASSERT (DbList != NULL);
-    SignatureList = DbList;
-    SignatureListSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
-    CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
-    SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
-    SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
-    SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
-    CertData                           = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
-    CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-    CopyMem (
-      (UINT8 *)CertData->SignatureData,
-      RootCert,
-      RootCertSize
-      );
-    CertData = (EFI_SIGNATURE_DATA *)((UINT8 *)CertData + SignatureList->SignatureSize);
-    CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-    CopyMem (
-      (UINT8 *)CertData->SignatureData,
-      RootCert,
-      RootCertSize
-      );
-
-    /*
-    RootCert = TestRootCer;
-    RootCertSize = TestRootCerSize;
-    SignatureList  = (EFI_SIGNATURE_LIST *)((UINT8 *)SignatureList + SignatureList->SignatureListSize);
-    SignatureListSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
-    CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
-    SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
-    SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
-    SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
-    CertData                           = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
-    CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-    CopyMem (
-      (UINT8 *)CertData->SignatureData,
-      RootCert,
-      RootCertSize
-      );
-    //*/
+  //
+  // In this test config, The database has two signature lists.
+  // The first one contains two siganture data for two root certs.
+  // The second one contains one signature data for one root cert
+  // which matches the cert chain of the responder.
+  //
+  SignatureHeaderSize = 0;
+  DbSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
+  DbList        = AllocateZeroPool (DbSize);
+  ASSERT (DbList != NULL);
+  SignatureList = DbList;
+  SignatureListSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
+  CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
+  SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
+  SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
+  SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
+  CertData                           = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
+  CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+  CopyMem (
+    (UINT8 *)CertData->SignatureData,
+    RootCert,
+    RootCertSize
+    );
+  CertData = (EFI_SIGNATURE_DATA *)((UINT8 *)CertData + SignatureList->SignatureSize);
+  CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+  CopyMem (
+    (UINT8 *)CertData->SignatureData,
+    RootCert,
+    RootCertSize
+    );
 
   /*
-    else if (TestConfig == TEST_CONFIG_NO_EFI_CERT_X509_GUID_IN_DB) {
-      SignatureHeaderSize = 0;
-      DbSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
-      DbList   = AllocateZeroPool (DbSize);
-      SignatureList = DbList;
-      SignatureListSize = DbSize;
-      ASSERT (SignatureList != NULL);
-      // Here the SignatureType is gEfiCertSha256Guid, not gEfiCertX509Guid.
-      CopyGuid (&SignatureList->SignatureType, &gEfiCertSha256Guid);
-      SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
-      SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
-      SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
-      CertData                           = (VOID *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
-      CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-      CopyMem (
-        (UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID),
-        RootCert,
-        RootCertSize
-        );
-    } else {
-      SignatureHeaderSize = 0;
-      DbSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
-      DbList   = AllocateZeroPool (DbSize);
-      SignatureList = DbList;
-      SignatureListSize = DbSize;
-      ASSERT (SignatureList != NULL);
-      CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
-      SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
-      SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
-      SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
-      CertData                           = (VOID *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
-      CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-      CopyMem (
-        (UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID),
-        RootCert,
-        RootCertSize
-        );
-    }
+  RootCert = TestRootCer;
+  RootCertSize = TestRootCerSize;
+  SignatureList  = (EFI_SIGNATURE_LIST *)((UINT8 *)SignatureList + SignatureList->SignatureListSize);
+  SignatureListSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
+  CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
+  SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
+  SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
+  SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
+  CertData                           = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
+  CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+  CopyMem (
+    (UINT8 *)CertData->SignatureData,
+    RootCert,
+    RootCertSize
+    );
+  //*/
+
+  /*
+  else if (TestConfig == TEST_CONFIG_NO_EFI_CERT_X509_GUID_IN_DB) {
+    SignatureHeaderSize = 0;
+    DbSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
+    DbList   = AllocateZeroPool (DbSize);
+    SignatureList = DbList;
+    SignatureListSize = DbSize;
+    ASSERT (SignatureList != NULL);
+    // Here the SignatureType is gEfiCertSha256Guid, not gEfiCertX509Guid.
+    CopyGuid (&SignatureList->SignatureType, &gEfiCertSha256Guid);
+    SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
+    SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
+    SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
+    CertData                           = (VOID *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
+    CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+    CopyMem (
+      (UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID),
+      RootCert,
+      RootCertSize
+      );
+  } else {
+    SignatureHeaderSize = 0;
+    DbSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
+    DbList   = AllocateZeroPool (DbSize);
+    SignatureList = DbList;
+    SignatureListSize = DbSize;
+    ASSERT (SignatureList != NULL);
+    CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
+    SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
+    SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
+    SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
+    CertData                           = (VOID *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
+    CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+    CopyMem (
+      (UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID),
+      RootCert,
+      RootCertSize
+      );
+  }
   //*/
   Status = gRT->SetVariable (
                   EFI_DEVICE_SECURITY_DATABASE,

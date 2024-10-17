@@ -410,7 +410,7 @@ INF OvmfPkg/Tcg/TdTcg2Dxe/TdTcg2Dxe.inf
 
 !if $(LIBSPDM_ENABLE)
   INF OvmfPkg/DeployCert/DeployCert.inf
-  INF  OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
+  INF OvmfPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
 !endif
 
 ################################################################################

@@ -25,8 +25,6 @@
   SKUID_IDENTIFIER               = DEFAULT
   FLASH_DEFINITION               = OvmfPkg/OvmfPkgX64.fdf
 
-  DEFINE CRYPT_LIB = MBEDTLS
-
   #
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE

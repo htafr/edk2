@@ -405,16 +405,6 @@ CreateSpdmDeviceContext (
         Data     = Cert->SignatureData;
         DataSize = DbList->SignatureSize - sizeof (EFI_GUID);
 
-        /*
-        DEBUG ((DEBUG_INFO,
-              "[EDKII @ %a]:\n"
-              ,
-              __func__));
-        for (UINTN i = 0 ; i < DataSize; i++)
-          DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)Data)[i]));
-        DEBUG ((DEBUG_INFO, "\n"));
-        //*/
-
         ZeroMem (&Parameter, sizeof (Parameter));
         Parameter.location = SpdmDataLocationLocal;
         SpdmReturn         = SpdmSetData (SpdmContext, SpdmDataPeerPublicRootCert, &Parameter, Data, DataSize);
