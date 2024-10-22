@@ -327,6 +327,9 @@ MainEntryPoint (
   UINT8               *RootKey;
   UINTN               RootKeySize;
 
+  Status = ProvisionNvIndex ();
+  DEBUG ((DEBUG_INFO, "%a: ProvisionNvIndex - %r\n", __func__, Status));
+
   DEBUG ((DEBUG_INFO, "[EDKII @ %a]: Deploying certificates...\n", __func__));
 
   CertChain     = RequesterPublicCertificateChainData;
