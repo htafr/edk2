@@ -782,7 +782,8 @@ typedef struct {
   UINT32    phEnable     : 1;
   UINT32    shEnable     : 1;
   UINT32    ehEnable     : 1;
-  UINT32    reserved3_30 : 28;
+  UINT32    phEnableNV   : 1;
+  UINT32    reserved4_30 : 27;
   UINT32    orderly      : 1;
 } TPMA_STARTUP_CLEAR;
 
