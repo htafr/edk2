@@ -307,8 +307,6 @@ PciSearchDevice (
     ResetPowerManagementFeature (PciIoDevice);
   }
 
-  ProbeDoeSupport (PciIoDevice);
-
   //
   // Insert it into a global tree for future reference
   //
