@@ -334,7 +334,7 @@ MainEntryPoint (
 
   CertChain     = RequesterPublicCertificateChainData;
   CertChainSize = RequesterPublicCertificateChainDataSize;
-  HashSize      = SHA384_HASH_SIZE;
+  HashSize      = SHA256_HASH_SIZE;
   RootKey       = TestRootKey;
   RootKeySize   = TestRootKeySize;
   RootCert      = ResponderPublicCertificateChainHash;
