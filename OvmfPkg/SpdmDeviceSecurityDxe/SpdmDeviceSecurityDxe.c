@@ -220,6 +220,13 @@ NotifyDeviceState (
       ));
   }
 
+  DEBUG ((
+    DEBUG_INFO,
+    "State - Measurement - 0x%08x, Authentication - 0x%08x\n",
+    DeviceSecurityState->MeasurementState,
+    DeviceSecurityState->AuthenticationState
+    ));
+
   return EFI_SUCCESS;
 }
 
@@ -279,9 +286,6 @@ DeviceAuthentication (
 {
   EDKII_DEVICE_SECURITY_POLICY          DeviceSecurityPolicy;
   EDKII_DEVICE_SECURITY_STATE           DeviceSecurityState;
-#if (LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP) || (LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)
-  SPDM_DEVICE_CONTEXT                   *SpdmDeviceContext;
-#endif
   EFI_STATUS                            Status;
   UINTN                                 BufferSize;
   EFI_HANDLE                            Handle;
@@ -306,7 +310,6 @@ DeviceAuthentication (
   SpdmDeviceInfo.AcquireReceiverBuffer      = SpdmDeviceAcquireBuffer;
   SpdmDeviceInfo.ReleaseReceiverBuffer      = SpdmDeviceReleaseBuffer;
 
-  //SpdmDeviceInfo.TransportLayer             = SOCKET_TRANSPORT_TYPE_PCI_DOE;
   SpdmDeviceInfo.Version                    = SPDM_MESSAGE_VERSION_13;
   SpdmDeviceInfo.SecuredMessageVersion      = SECURED_SPDM_VERSION_11;
   SpdmDeviceInfo.RequesterCapabilityFlags   = (0 |
@@ -337,10 +340,8 @@ DeviceAuthentication (
                                               SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_384 |
                                               SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_256;
   SpdmDeviceInfo.ReqBaseAsymAlgo            = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_2048;
-  //*
   SpdmDeviceInfo.DheAlgo                    = SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_384_R1 |
                                               SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_256_R1;
-  //*/
   SpdmDeviceInfo.AeadAlgo                   = SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_256_GCM |
                                               SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_128_GCM;
   SpdmDeviceInfo.KeyScheduleAlgo            = SPDM_ALGORITHMS_KEY_SCHEDULE_HMAC_HASH;
@@ -354,39 +355,36 @@ DeviceAuthentication (
   DeviceSecurityState.MeasurementState    = 0x0;
   DeviceSecurityState.AuthenticationState = 0x0;
 
-  SpdmDeviceContext = GetSpdmDeviceContextViaDeviceId (DeviceId);
-  if (SpdmDeviceContext == NULL) {
-    /* Just install SpdmIoProtocol if exists PciDoeProtocol */
-    BufferSize = sizeof (Handle);
-    Status     = gBS->LocateHandle (
-                        ByProtocol,
-                        &gEdkiiPciDoeProtocol,
-                        NULL,
-                        &BufferSize,
-                        &Handle
-                        );
-    if (Status != EFI_SUCCESS) {
-      return EFI_UNSUPPORTED;
-    }
+  /* Just install SpdmIoProtocol if exists PciDoeProtocol */
+  BufferSize = sizeof (Handle);
+  Status     = gBS->LocateHandle (
+                      ByProtocol,
+                      &gEdkiiPciDoeProtocol,
+                      NULL,
+                      &BufferSize,
+                      &Handle
+                      );
+  if (Status != EFI_SUCCESS) {
+    return EFI_SUCCESS;
+  }
 
-    Status = gBS->HandleProtocol (
-                    Handle,
-                    &gEdkiiPciDoeProtocol,
-                    (VOID **)&PciDoeProtocol
-                    );
-    if ((Status != EFI_SUCCESS) && (PciDoeProtocol != NULL)) {
-      return EFI_UNSUPPORTED;
-    }
+  Status = gBS->HandleProtocol (
+                  Handle,
+                  &gEdkiiPciDoeProtocol,
+                  (VOID **)&PciDoeProtocol
+                  );
+  if ((Status != EFI_SUCCESS) && (PciDoeProtocol != NULL)) {
+    return EFI_SUCCESS;
+  }
 
-    /**
-     WARN: There is a problem with the DeviceId->DeviceHandle. It doesn't seem to be NULL,
-           but the function OrderedCollectionFind in Core/Dxe/Hand/Handle.c isn't
-           finding it.
-     **/
-    Status = InstallSpdmIoProtocol (&Handle);
-    if (Status != EFI_SUCCESS) {
-      return EFI_UNSUPPORTED;
-    }
+  /**
+    WARN: There is a problem with the DeviceId->DeviceHandle. It doesn't seem to be NULL,
+          but the function OrderedCollectionFind in Core/Dxe/Hand/Handle.c isn't
+          finding it.
+    **/
+  Status = InstallSpdmIoProtocol (&Handle);
+  if (Status != EFI_SUCCESS) {
+    return EFI_SUCCESS;
   }
 
   Status = mDeviceSecurityPolicyProtocol.GetDevicePolicy (&mDeviceSecurityPolicyProtocol, DeviceId, &DeviceSecurityPolicy);
@@ -403,14 +401,6 @@ DeviceAuthentication (
     DEBUG ((DEBUG_ERROR, "%a: mDeviceSecurityPolicy->NotifyDeviceState - %r\n", __func__, Status));
   }
 
-#if (LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP) || (LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)
-  SpdmDeviceContext = GetSpdmDeviceContextViaDeviceId (DeviceId);
-  if (SpdmDeviceContext == NULL) {
-    Status = EFI_UNSUPPORTED;
-    goto UninstallProtocol;
-  }
-#endif
-
   if ((DeviceSecurityState.MeasurementState == 0) &&
       (DeviceSecurityState.AuthenticationState == 0)) {
     Status = EFI_SUCCESS;
@@ -418,7 +408,6 @@ DeviceAuthentication (
     Status = EFI_SECURITY_VIOLATION;
   }
 
-UninstallProtocol:
   UninstallSpdmIoProtocol (&Handle);
   return Status;
 }
