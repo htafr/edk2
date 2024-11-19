@@ -15,6 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/Usb2HostController.h>
 #include <Protocol/UsbHostController.h>
 #include <Protocol/UsbIo.h>
+#include <Protocol/UsbSpdm.h>
 #include <Protocol/DevicePath.h>
 
 #include <Library/BaseLib.h>
@@ -38,6 +39,7 @@ typedef struct _USB_HUB_API    USB_HUB_API;
 #include "UsbDesc.h"
 #include "UsbHub.h"
 #include "UsbEnumer.h"
+#include "UsbSpdm.h"
 
 //
 // USB bus timeout experience values
@@ -141,6 +143,9 @@ typedef struct _USB_HUB_API    USB_HUB_API;
 #define USB_INTERFACE_FROM_USBIO(a) \
           CR(a, USB_INTERFACE, UsbIo, USB_INTERFACE_SIGNATURE)
 
+#define USB_INTERFACE_FROM_USB_SPDM(a) \
+          CR(a, USB_INTERFACE, UsbSpdm, USB_INTERFACE_SIGNATURE)
+
 #define USB_BUS_FROM_THIS(a) \
           CR(a, USB_BUS, BusId, USB_BUS_SIGNATURE)
 
@@ -205,6 +210,7 @@ struct _USB_INTERFACE {
   //
   EFI_HANDLE                  Handle;
   EFI_USB_IO_PROTOCOL         UsbIo;
+  EDKII_USB_SPDM_PROTOCOL     UsbSpdm;
   EFI_DEVICE_PATH_PROTOCOL    *DevicePath;
   BOOLEAN                     IsManaged;
 

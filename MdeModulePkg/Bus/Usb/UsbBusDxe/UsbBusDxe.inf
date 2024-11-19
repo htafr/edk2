@@ -40,6 +40,8 @@
   UsbUtility.c
   UsbDesc.h
   UsbBus.h
+  UsbSpdm.c
+  UsbSpdm.h
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -63,6 +65,7 @@
   gEfiDevicePathProtocolGuid
   gEfiUsb2HcProtocolGuid                        ## TO_START
   gEfiUsbHcProtocolGuid                         ## TO_START
+  gEdkiiUsbSpdmProtocol                         ## SOMETIMES_PRODUCES
 
 # [Event]
 #
