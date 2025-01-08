@@ -55,6 +55,7 @@
 
 [Protocols]
   gEdkiiPciDoeProtocol                    ## CONSUMES
+  gEdkiiUsbSpdmProtocolGuid               ## CONSUMES
   gEdkiiDeviceSecurityProtocolGuid        ## PRODUCES
   gSpdmProtocolGuid                       ## PRODUCES
   gEfiDevicePathProtocolGuid              ## PRODUCES

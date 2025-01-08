@@ -6,6 +6,7 @@
 #include <industry_standard/spdm.h>
 #include <industry_standard/spdm_secured_message.h>
 #include <IndustryStandard/Pci.h>
+#include <IndustryStandard/Usb.h>
 #include <IndustryStandard/Tpm20.h>
 #include <IndustryStandard/UefiTcgPlatform.h>
 #include <IndustryStandard/PcieDoeCapability.h>
@@ -23,6 +24,8 @@
 #include <library/spdm_transport_mctp_lib.h>
 #include <SpdmSecurityLibInternal.h>
 #include <Protocol/PciDoe.h>
+#include <Protocol/UsbSpdm.h>
+#include <Protocol/UsbIo.h>
 #include <Protocol/Spdm.h>
 #include <Protocol/SpdmIo.h>
 
@@ -72,6 +75,12 @@
 #ifndef LIBSPDM_MAX_SPDM_MSG_SIZE
 #define LIBSPDM_MAX_SPDM_MSG_SIZE 0x1200
 #endif
+
+typedef enum {
+  SPDM_DEVICE_BUS_NONE,
+  SPDM_DEVICE_USB_TYPE,
+  SPDM_DEVICE_PCI_TYPE
+} SPDM_DEVICE_BUS_TYPE;
 
 EFI_STATUS
 EFIAPI

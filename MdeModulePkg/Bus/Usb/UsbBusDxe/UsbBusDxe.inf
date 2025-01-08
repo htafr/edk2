@@ -45,7 +45,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-
+  MdeModulePkg/MdeModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -57,7 +57,6 @@
   DebugLib
   ReportStatusCodeLib
 
-
 [Protocols]
   gEfiUsbIoProtocolGuid                         ## BY_START
   ## TO_START
@@ -65,7 +64,9 @@
   gEfiDevicePathProtocolGuid
   gEfiUsb2HcProtocolGuid                        ## TO_START
   gEfiUsbHcProtocolGuid                         ## TO_START
-  gEdkiiUsbSpdmProtocol                         ## SOMETIMES_PRODUCES
+  gEdkiiDeviceSecurityProtocolGuid              ## SOMETIMES_CONSUMES
+  gEdkiiDeviceIdentifierTypeUsbGuid             ## SOMETIMES_CONSUMES
+  gEdkiiUsbSpdmProtocolGuid                     ## SOMETIMES_PRODUCES
 
 # [Event]
 #

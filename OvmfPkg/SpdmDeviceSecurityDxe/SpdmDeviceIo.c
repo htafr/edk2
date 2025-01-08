@@ -2,100 +2,43 @@
 
 #define SPDM_TIMEOUT  1000000   /* 1 second */
 
-/*
-VOID
-PcieDoeControlRead32 (
-  IN      EFI_PCI_IO_PROTOCOL *This,
-  IN OUT  UINT32              *Buffer
+static
+SPDM_DEVICE_BUS_TYPE
+GetSpdmBusType (
+  OUT EFI_HANDLE  *Handle
   )
 {
-  This->PciIo->Pci.Read (
-                    This->PciIo,
-                    EfiPciIoWidthUint32,
-                    This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_CONTROL_OFFSET,
-                    1,
-                    Buffer
-                    );
-}
+  EFI_STATUS  Status;
+  UINTN       BufferSize;
 
-VOID
-PcieDoeControlWrite32 (
-  IN      EFI_PCI_IO_PROTOCOL *This,
-  IN      UINT32              *Buffer
-  )
-{
-  This->PciIo->Pci.Write (
-                    This->PciIo,
-                    EfiPciIoWidthUint32,
-                    This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_CONTROL_OFFSET,
-                    1,
-                    Buffer
-                    );
-}
+  ///
+  /// Check which type of device it is
+  ///
+  BufferSize = sizeof (EFI_HANDLE);
+  Status     = gBS->LocateHandle (
+                      ByProtocol,
+                      &gEdkiiDeviceIdentifierTypePciGuid,
+                      NULL,
+                      &BufferSize,
+                      Handle
+                      );
+  if (!EFI_ERROR (Status)) {
+    return SPDM_DEVICE_PCI_TYPE;
+  }
 
-VOID
-PcieDoeStatusRead32 (
-  IN      SPDM_PRIVATE_DATA *This,
-  IN OUT  UINT32            *Buffer
-  )
-{
-  This->PciIo->Pci.Read (
-                    This->PciIo,
-                    EfiPciIoWidthUint32,
-                    This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_STATUS_OFFSET,
-                    1,
-                    Buffer
-                    );
-}
+  Status = gBS->LocateHandle (
+                  ByProtocol,
+                  &gEdkiiDeviceIdentifierTypeUsbGuid,
+                  NULL,
+                  &BufferSize,
+                  Handle
+                  );
+  if (!EFI_ERROR (Status)) {
+    return SPDM_DEVICE_USB_TYPE;
+  }
 
-VOID
-PcieDoeWriteMailboxWrite32 (
-  IN     SPDM_PRIVATE_DATA  *This,
-  IN     UINT32             *Buffer
-  )
-{
-  This->PciIo->Pci.Write (
-                        This->PciIo,
-                        EfiPciIoWidthUint32,
-                        This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_WRITE_DATA_MAILBOX_OFFSET,
-                        1,
-                        Buffer
-                        );
-  return;
+  return SPDM_DEVICE_BUS_NONE;
 }
-
-VOID
-PcieDoeReadMailboxRead32 (
-  IN     SPDM_PRIVATE_DATA  *This,
-  IN OUT UINT32             *Buffer
-  )
-{
-  This->PciIo->Pci.Read (
-                        This->PciIo,
-                        EfiPciIoWidthUint32,
-                        This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_READ_DATA_MAILBOX_OFFSET,
-                        1,
-                        Buffer
-                        );
-  return;
-}
-
-VOID
-PcieDoeReadMailboxWrite32 (
-  IN     SPDM_PRIVATE_DATA  *This,
-  IN     UINT32             *Buffer
-  )
-{
-  This->PciIo->Pci.Write (
-                        This->PciIo,
-                        EfiPciIoWidthUint32,
-                        This->DoeCapabilityOffset + PCI_EXPRESS_REG_DOE_READ_DATA_MAILBOX_OFFSET,
-                        1,
-                        Buffer
-                        );
-  return;
-}
-//*/
 
 SPDM_RETURN
 SpdmIoSendRequest (
@@ -107,11 +50,13 @@ SpdmIoSendRequest (
 {
   EFI_STATUS                  Status;
   EFI_HANDLE                  Handle;
-  UINTN                       BufferSize;
+  // UINTN                       BufferSize;
   EDKII_PCI_DOE_PROTOCOL      *PciDoeProtocol;
+  EDKII_USB_SPDM_PROTOCOL     *UsbSpdm;
   //UINT64                      Delay = 0;
   UINT32                      DataObjectSize;
   UINT8                       *DataObjectBuffer;
+  SPDM_DEVICE_BUS_TYPE        BusType;
 
   if (Request == NULL) {
     return LIBSPDM_STATUS_INVALID_PARAMETER;
@@ -121,22 +66,23 @@ SpdmIoSendRequest (
     return LIBSPDM_STATUS_INVALID_PARAMETER;
   }
 
-  BufferSize = sizeof (Handle);
-  Status     = gBS->LocateHandle (
-                      ByProtocol,
-                      &gEdkiiPciDoeProtocol,
-                      NULL,
-                      &BufferSize,
-                      &Handle
-                      );
-  ASSERT_EFI_ERROR (Status);
+  BusType = GetSpdmBusType (&Handle);
 
-  Status = gBS->HandleProtocol (
-                  Handle,
-                  &gEdkiiPciDoeProtocol,
-                  (VOID **)&PciDoeProtocol
-                  );
-  ASSERT_EFI_ERROR (Status);
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEdkiiPciDoeProtocol,
+                    (VOID **)&PciDoeProtocol
+                    );
+    ASSERT_EFI_ERROR (Status);
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEdkiiUsbSpdmProtocolGuid,
+                    (VOID **)&UsbSpdm
+                    );
+    ASSERT_EFI_ERROR (Status);
+  }
 
   DataObjectSize   = (UINT32)RequestSize;
   DataObjectBuffer = (UINT8 *)Request;
@@ -167,7 +113,11 @@ SpdmIoSendRequest (
     Status = LIBSPDM_STATUS_SUCCESS;
   }
   //*/
-  Status = PciDoeProtocol->Send (PciDoeProtocol, DataObjectSize, DataObjectBuffer);
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    Status = PciDoeProtocol->Send (PciDoeProtocol, DataObjectSize, DataObjectBuffer);
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    Status = UsbSpdm->Send (UsbSpdm, DataObjectBuffer, DataObjectSize);
+  }
   if (EFI_ERROR (Status)) {
     return LIBSPDM_STATUS_SEND_FAIL;
   } else {
@@ -185,12 +135,14 @@ SpdmIoReceiveResponse (
 {
   EFI_STATUS                  Status;
   EFI_HANDLE                  Handle;
-  UINTN                       BufferSize;
+  // UINTN                       BufferSize;
   EDKII_PCI_DOE_PROTOCOL      *PciDoeProtocol;
+  EDKII_USB_SPDM_PROTOCOL     *UsbSpdm;
   UINT8                       *ResponseDataObjectBuffer = NULL;
   UINTN                       ResponseDataObjectSize    = 0;
   UINTN                       DataObjectSize            = 0;
   //UINT64                      Delay  = 0;
+  SPDM_DEVICE_BUS_TYPE        BusType;
 
   DEBUG ((DEBUG_ERROR, "[%a] Start ... \n", __func__));
 
@@ -202,22 +154,23 @@ SpdmIoReceiveResponse (
     return LIBSPDM_STATUS_INVALID_PARAMETER;
   }
 
-  BufferSize = sizeof (Handle);
-  Status     = gBS->LocateHandle (
-                      ByProtocol,
-                      &gEdkiiPciDoeProtocol,
-                      NULL,
-                      &BufferSize,
-                      &Handle
-                      );
-  ASSERT_EFI_ERROR (Status);
+  BusType = GetSpdmBusType (&Handle);
 
-  Status = gBS->HandleProtocol (
-                  Handle,
-                  &gEdkiiPciDoeProtocol,
-                  (VOID **)&PciDoeProtocol
-                  );
-  ASSERT_EFI_ERROR (Status);
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEdkiiPciDoeProtocol,
+                    (VOID **)&PciDoeProtocol
+                    );
+    ASSERT_EFI_ERROR (Status);
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEdkiiUsbSpdmProtocolGuid,
+                    (VOID **)&UsbSpdm
+                    );
+    ASSERT_EFI_ERROR (Status);
+  }
 
 
   if (Timeout == 0) {
@@ -277,48 +230,60 @@ SpdmIoReceiveResponse (
   } while (Delay != 0);
   //*/
 
-  /* Get Headers */
-  *ResponseSize = 2 * sizeof (UINT32);
-  PciDoeProtocol->Receive (PciDoeProtocol, ResponseSize, *Response);
 
-  /*
-  DEBUG ((DEBUG_INFO, "[EDKII @ %a]: ", __func__));
-  for (UINTN i = 0; i < *ResponseSize; i++)
-    DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)*Response)[i]));
-  DEBUG ((DEBUG_INFO, "\n"));
-  //*/
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    /* Get Headers */
+    *ResponseSize = 2 * sizeof (UINT32);
+    PciDoeProtocol->Receive (PciDoeProtocol, ResponseSize, *Response);
 
-  DataObjectSize = *(UINTN *)(((UINT32 *)*Response) + 1);
+    DataObjectSize = *(UINTN *)(((UINT32 *)*Response) + 1);
 
-  /**
-    TODO: if the return of this function is an error, it's necessary
-          to reset PCI DOE Mailbox
-  **/
-  if (DataObjectSize * sizeof (UINT32) > LIBSPDM_MAX_SPDM_MSG_SIZE) {
-    *ResponseSize = DataObjectSize;
-    return LIBSPDM_STATUS_BUFFER_TOO_SMALL;
+    /**
+      TODO: if the return of this function is an error, it's necessary
+            to reset PCI DOE Mailbox
+    **/
+    if (DataObjectSize * sizeof (UINT32) > LIBSPDM_MAX_SPDM_MSG_SIZE) {
+      *ResponseSize = DataObjectSize;
+      return LIBSPDM_STATUS_BUFFER_TOO_SMALL;
+    }
+
+    ResponseDataObjectSize   = (DataObjectSize - 2) * sizeof (UINT32);
+    ResponseDataObjectBuffer = (UINT8 *)*Response + (2 * sizeof (UINT32));
+
+    Status = PciDoeProtocol->Receive (PciDoeProtocol, &ResponseDataObjectSize, (VOID *)ResponseDataObjectBuffer);
+    if (EFI_ERROR (Status)) {
+      goto Error;
+    }
+    *ResponseSize = DataObjectSize * sizeof (UINT32);
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    ResponseDataObjectSize = 2;
+    ResponseDataObjectBuffer = AllocateZeroPool (LIBSPDM_MAX_SPDM_MSG_SIZE);
+    Status = UsbSpdm->Receive (UsbSpdm, (UINT16)DataObjectSize, &ResponseDataObjectSize, (VOID *)ResponseDataObjectBuffer);
+    if (EFI_ERROR (Status)) {
+      goto Error;
+    }
+
+    ResponseDataObjectSize = 64;
+    *ResponseSize = *ResponseDataObjectBuffer |
+                    *(ResponseDataObjectBuffer + sizeof (UINT8)) << 8;
+    ResponseDataObjectBuffer = (UINT8 *)*Response;
+    do {
+      Status = UsbSpdm->Receive (
+                          UsbSpdm,
+                          (UINT16)DataObjectSize,
+                          &ResponseDataObjectSize,
+                          (VOID *)(ResponseDataObjectBuffer + (DataObjectSize * sizeof (UINT8)))
+                          );
+      if (EFI_ERROR (Status)) {
+        goto Error;
+      }
+
+      DataObjectSize += ResponseDataObjectSize;
+    } while (DataObjectSize < *ResponseSize);
+
+    *ResponseSize = *ResponseSize - 2;
+    *Response = (UINT8 *)*Response + (2 * sizeof (UINT8));
   }
-
-  ResponseDataObjectSize   = (DataObjectSize - 2) * sizeof (UINT32);
-  ResponseDataObjectBuffer = (UINT8 *)*Response + (2 * sizeof (UINT32));
-
-  if (PciDoeProtocol->Receive (PciDoeProtocol, &ResponseDataObjectSize, (VOID *)ResponseDataObjectBuffer) != EFI_SUCCESS) {
-    goto Error;
-  }
-
-  *ResponseSize = DataObjectSize * sizeof (UINT32);
-
-  /*
-  if (Delay == 0) {
-    Status = LIBSPDM_STATUS_RECEIVE_FAIL;
-  } else {
-    Status = LIBSPDM_STATUS_SUCCESS;
-  }
-  DEBUG ((DEBUG_INFO, "[EDKII @ %a]: ", __func__));
-  for (UINTN i = 0; i < *ResponseSize; i++)
-    DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)*Response)[i]));
-  DEBUG ((DEBUG_INFO, "\n"));
-  //*/
 
   return LIBSPDM_STATUS_SUCCESS;
 

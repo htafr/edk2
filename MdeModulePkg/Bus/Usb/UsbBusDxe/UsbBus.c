@@ -35,6 +35,8 @@ EFI_DRIVER_BINDING_PROTOCOL  mUsbBusDriverBinding = {
   NULL
 };
 
+EDKII_DEVICE_SECURITY_PROTOCOL  *mDeviceSecurityProtocol;
+
 /**
   USB_IO function to execute a control transfer. This
   function will execute the USB transfer. If transfer
@@ -1321,6 +1323,14 @@ UsbBusControllerDriverStart (
   EFI_USB_BUS_PROTOCOL      *UsbBusId;
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *ParentDevicePath;
+
+  if (mDeviceSecurityProtocol == NULL) {
+    gBS->LocateProtocol (
+           &gEdkiiDeviceSecurityProtocolGuid,
+           NULL,
+           (VOID **)&mDeviceSecurityProtocol
+           );
+  }
 
   Status = gBS->OpenProtocol (
                   Controller,

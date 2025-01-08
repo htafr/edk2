@@ -17,9 +17,11 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/UsbIo.h>
 #include <Protocol/UsbSpdm.h>
 #include <Protocol/DevicePath.h>
+#include <Protocol/DeviceSecurity.h>
 
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include <Library/PcdLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -761,5 +763,6 @@ extern EFI_USB_IO_PROTOCOL           mUsbIoProtocol;
 extern EFI_DRIVER_BINDING_PROTOCOL   mUsbBusDriverBinding;
 extern EFI_COMPONENT_NAME_PROTOCOL   mUsbBusComponentName;
 extern EFI_COMPONENT_NAME2_PROTOCOL  mUsbBusComponentName2;
+extern EDKII_USB_SPDM_PROTOCOL       mUsbSpdmProtocol;
 
 #endif

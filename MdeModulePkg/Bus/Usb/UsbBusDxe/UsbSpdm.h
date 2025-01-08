@@ -17,10 +17,10 @@
 **/
 EFI_STATUS
 EFIAPI
-UsbSpdmSend(
+UsbSpdmSend (
   IN EDKII_USB_SPDM_PROTOCOL  *This,
-  IN OUT VOID                 *Data,
-  IN OUT UINTN                *DataLength
+  IN VOID                     *Data,
+  IN UINTN                    DataLength
   );
 
 /**
@@ -37,10 +37,11 @@ UsbSpdmSend(
 **/
 EFI_STATUS
 EFIAPI
-UsbSpdmReceive(
-  IN EDKII_USB_SPDM_PROTOCOL  *This,
-  IN OUT VOID                 *Data,
-  IN OUT UINTN                *DataLength
+UsbSpdmReceive (
+  IN  EDKII_USB_SPDM_PROTOCOL   *This,
+  IN  UINT16                    Value,
+  OUT UINTN                     *DataLength,
+  OUT VOID                      *Data
   );
 
 #endif

@@ -9,6 +9,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "UsbBus.h"
 
+extern EDKII_DEVICE_SECURITY_PROTOCOL  *mDeviceSecurityProtocol;
+
 /**
   Return the endpoint descriptor in this interface.
 
@@ -39,6 +41,69 @@ UsbGetEndpointDesc (
   }
 
   return NULL;
+}
+
+/**
+  Authenticate USB interface.
+
+  @param  UsbIf                 The USB interface to be authenticated.
+
+  @retval EFI_SUCCESS           The device passes the authentication.
+  @return not EFI_SUCCESS       The device failes the authentication or
+                                unexpected error happen during authentication.
+**/
+EFI_STATUS
+UsbAuthenticateInterface (
+  IN USB_INTERFACE  *UsbIf
+  )
+{
+  EDKII_DEVICE_IDENTIFIER  DeviceIdentifier;
+  EFI_STATUS               Status;
+
+  if (mDeviceSecurityProtocol != NULL) {
+    //
+    // Prepare the parameter
+    //
+    DeviceIdentifier.Version = EDKII_DEVICE_IDENTIFIER_REVISION;
+    CopyGuid (&DeviceIdentifier.DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid);
+    DeviceIdentifier.DeviceHandle = NULL;
+    Status                        = gBS->InstallMultipleProtocolInterfaces (
+                                           &DeviceIdentifier.DeviceHandle,
+                                           &gEfiDevicePathProtocolGuid,
+                                           UsbIf->DevicePath,
+                                           &gEdkiiDeviceIdentifierTypeUsbGuid,
+                                           &UsbIf->UsbIo,
+                                           &gEdkiiUsbSpdmProtocolGuid,
+                                           &UsbIf->UsbSpdm,
+                                           NULL
+                                           );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    //
+    // Do DeviceAuthentication
+    //
+    Status = mDeviceSecurityProtocol->DeviceAuthenticate (mDeviceSecurityProtocol, &DeviceIdentifier);
+
+    gBS->UninstallMultipleProtocolInterfaces (
+           DeviceIdentifier.DeviceHandle,
+           &gEfiDevicePathProtocolGuid,
+           UsbIf->DevicePath,
+           &gEdkiiDeviceIdentifierTypeUsbGuid,
+           &UsbIf->UsbIo,
+           &gEdkiiUsbSpdmProtocolGuid,
+           &UsbIf->UsbSpdm,
+           NULL
+           );
+
+    return Status;
+  }
+
+  //
+  // Device Security Protocol is not found, just return success
+  //
+  return EFI_SUCCESS;
 }
 
 /**
@@ -118,6 +183,12 @@ UsbCreateInterface (
     sizeof (EFI_USB_IO_PROTOCOL)
     );
 
+  CopyMem (
+    &(UsbIf->UsbSpdm),
+    &mUsbSpdmProtocol,
+    sizeof (EDKII_USB_SPDM_PROTOCOL)
+  );
+
   //
   // Install protocols for USBIO and device path
   //
@@ -140,12 +211,31 @@ UsbCreateInterface (
     goto ON_ERROR;
   }
 
+  //
+  //  Authenticate interface
+  //
+  Status = UsbAuthenticateInterface (UsbIf);
+
+  //
+  // If authentication fails, skip this device.
+  //
+  if (EFI_ERROR (Status)) {
+    if (UsbIf->DevicePath != NULL) {
+      FreePool (UsbIf->DevicePath);
+    }
+
+    FreePool (UsbIf);
+    return NULL;
+  }
+
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &UsbIf->Handle,
                   &gEfiDevicePathProtocolGuid,
                   UsbIf->DevicePath,
                   &gEfiUsbIoProtocolGuid,
                   &UsbIf->UsbIo,
+                  &gEdkiiUsbSpdmProtocolGuid,
+                  &UsbIf->UsbSpdm,
                   NULL
                   );
 
@@ -166,6 +256,8 @@ UsbCreateInterface (
            UsbIf->DevicePath,
            &gEfiUsbIoProtocolGuid,
            &UsbIf->UsbIo,
+           &gEdkiiUsbSpdmProtocolGuid,
+           &UsbIf->UsbSpdm,
            NULL
            );
 

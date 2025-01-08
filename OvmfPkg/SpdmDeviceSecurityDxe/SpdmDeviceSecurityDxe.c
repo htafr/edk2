@@ -112,30 +112,54 @@ GetDevicePolicy (
   OUT EDKII_DEVICE_SECURITY_POLICY           *DeviceSecurityPolicy
   )
 {
-  EFI_STATUS          Status;
-  EFI_PCI_IO_PROTOCOL *PciIo;
-  UINT16              PciVendorId;
-  UINT16              PciDeviceId;
+  EFI_STATUS                Status;
+  EFI_PCI_IO_PROTOCOL       *PciIo;
+  EFI_USB_IO_PROTOCOL       *UsbIo;
+  EFI_USB_DEVICE_DESCRIPTOR *UsbDevDesc;
+  SPDM_DEVICE_BUS_TYPE      BusType;
+  UINT16                    PciVendorId;
+  UINT16                    PciDeviceId;
 
   CopyMem (DeviceSecurityPolicy, &mDeviceSecurityPolicyNone, sizeof (EDKII_DEVICE_SECURITY_POLICY));
 
-  if (!CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid)) {
+  if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid)) {
+    BusType = SPDM_DEVICE_PCI_TYPE;
+  } else if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid)) {
+    BusType = SPDM_DEVICE_USB_TYPE;
+  } else {
     return EFI_SUCCESS;
   }
 
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &gEdkiiDeviceIdentifierTypePciGuid,
-                  (VOID **)&PciIo
-                  );
-  if (EFI_ERROR (Status)) {
-    return EFI_SUCCESS;
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    Status = gBS->HandleProtocol (
+                    DeviceId->DeviceHandle,
+                    &gEdkiiDeviceIdentifierTypePciGuid,
+                    (VOID **)&PciIo
+                    );
+    if (EFI_ERROR (Status)) {
+      return EFI_SUCCESS;
+    }
+
+    Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_VENDOR_ID_OFFSET, 1, &PciVendorId);
+    ASSERT_EFI_ERROR (Status);
+    Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_DEVICE_ID_OFFSET, 1, &PciDeviceId);
+    ASSERT_EFI_ERROR (Status);
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    Status = gBS->HandleProtocol (
+                    DeviceId->DeviceHandle,
+                    &gEdkiiDeviceIdentifierTypeUsbGuid,
+                    (VOID **)&UsbIo
+                    );
+
+    if (EFI_ERROR (Status)) {
+      return EFI_SUCCESS;
+    }
+
+    UsbDevDesc = AllocateZeroPool (sizeof (EFI_USB_DEVICE_DESCRIPTOR));
+    Status = UsbIo->UsbGetDeviceDescriptor (UsbIo, UsbDevDesc);
+    ASSERT_EFI_ERROR (Status);
   }
 
-  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_VENDOR_ID_OFFSET, 1, &PciVendorId);
-  ASSERT_EFI_ERROR (Status);
-  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_DEVICE_ID_OFFSET, 1, &PciDeviceId);
-  ASSERT_EFI_ERROR (Status);
 
   /**
    * TODO: The device security policy can change among structs
@@ -173,51 +197,82 @@ NotifyDeviceState (
   IN  EDKII_DEVICE_SECURITY_STATE            *DeviceSecurityState
   )
 {
-  EFI_STATUS          Status;
-  EFI_PCI_IO_PROTOCOL *PciIo;
-  UINT16              PciVendorId;
-  UINT16              PciDeviceId;
-  UINTN               Segment;
-  UINTN               Bus;
-  UINTN               Device;
-  UINTN               Function;
+  EFI_STATUS                Status;
+  EFI_PCI_IO_PROTOCOL       *PciIo;
+  EFI_USB_IO_PROTOCOL       *UsbIo;
+  EFI_USB_DEVICE_DESCRIPTOR *UsbDevDesc;
+  SPDM_DEVICE_BUS_TYPE      BusType;
+  UINT16                    PciVendorId;
+  UINT16                    PciDeviceId;
+  UINTN                     Segment;
+  UINTN                     Bus;
+  UINTN                     Device;
+  UINTN                     Function;
 
-  if (!CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid)) {
+  if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid)) {
+    BusType = SPDM_DEVICE_PCI_TYPE;
+  } else if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid)) {
+    BusType = SPDM_DEVICE_USB_TYPE;
+  } else {
     return EFI_SUCCESS;
   }
 
-  Status = gBS->HandleProtocol (
-                  DeviceId->DeviceHandle,
-                  &gEdkiiDeviceIdentifierTypePciGuid,
-                  (VOID **)&PciIo
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a - %r\n", __func__, Status));
-    return EFI_SUCCESS;
-  }
-
-  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_VENDOR_ID_OFFSET, 1, &PciVendorId);
-  ASSERT_EFI_ERROR (Status);
-  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_DEVICE_ID_OFFSET, 1, &PciDeviceId);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = PciIo->GetLocation (
-                    PciIo,
-                    &Segment,
-                    &Bus,
-                    &Device,
-                    &Function
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    Status = gBS->HandleProtocol (
+                    DeviceId->DeviceHandle,
+                    &gEdkiiDeviceIdentifierTypePciGuid,
+                    (VOID **)&PciIo
                     );
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_INFO,
-      "%a: PCI Loc - %04x:%02x:%02x%02x\n",
-      __func__,
-      Segment,
-      Bus,
-      Device,
-      Function
-      ));
+    if (EFI_ERROR (Status)) {
+      return EFI_SUCCESS;
+    }
+
+    Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_VENDOR_ID_OFFSET, 1, &PciVendorId);
+    ASSERT_EFI_ERROR (Status);
+    Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, PCI_DEVICE_ID_OFFSET, 1, &PciDeviceId);
+    ASSERT_EFI_ERROR (Status);
+
+    Status = PciIo->GetLocation (
+                      PciIo,
+                      &Segment,
+                      &Bus,
+                      &Device,
+                      &Function
+                      );
+    if (!EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_INFO,
+        "%a: PCI Loc - %04x:%02x:%02x%02x\n",
+        __func__,
+        Segment,
+        Bus,
+        Device,
+        Function
+        ));
+    }
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    Status = gBS->HandleProtocol (
+                    DeviceId->DeviceHandle,
+                    &gEdkiiDeviceIdentifierTypeUsbGuid,
+                    (VOID **)&UsbIo
+                    );
+    if (EFI_ERROR (Status)) {
+      return EFI_SUCCESS;
+    }
+
+    UsbDevDesc = AllocateZeroPool (sizeof (EFI_USB_DEVICE_DESCRIPTOR));
+    Status = UsbIo->UsbGetDeviceDescriptor (UsbIo, UsbDevDesc);
+    if (!EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_INFO,
+        "%a: USB Device - %04x:%04x:%02x:%02x\n",
+        __func__,
+        UsbDevDesc->IdVendor,
+        UsbDevDesc->IdProduct,
+        UsbDevDesc->DescriptorType,
+        UsbDevDesc->NumConfigurations
+        ));
+    }
   }
 
   DEBUG ((
@@ -290,7 +345,17 @@ DeviceAuthentication (
   UINTN                                 BufferSize;
   EFI_HANDLE                            Handle;
   EDKII_PCI_DOE_PROTOCOL                *PciDoeProtocol;
+  EDKII_USB_SPDM_PROTOCOL               *UsbSpdm;
   EDKII_SPDM_DEVICE_INFO                SpdmDeviceInfo;
+  SPDM_DEVICE_BUS_TYPE                  BusType;
+
+  if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypePciGuid)) {
+    BusType = SPDM_DEVICE_PCI_TYPE;
+  } else if (CompareGuid (&DeviceId->DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid)) {
+    BusType = SPDM_DEVICE_USB_TYPE;
+  } else {
+    return EFI_SUCCESS;
+  }
 
   ZeroMem (&SpdmDeviceInfo, sizeof (SpdmDeviceInfo));
   SpdmDeviceInfo.DeviceId                   = DeviceId;
@@ -300,8 +365,14 @@ DeviceAuthentication (
   SpdmDeviceInfo.MaxSpdmMsgSize             = LIBSPDM_MAX_SPDM_MSG_SIZE;
   SpdmDeviceInfo.TransportHeaderSize        = LIBSPDM_TRANSPORT_HEADER_SIZE;
   SpdmDeviceInfo.TransportTailSize          = LIBSPDM_TRANSPORT_TAIL_SIZE;
-  SpdmDeviceInfo.TransportEncodeMessage     = SpdmTransportPciDoeEncodeMessage;
-  SpdmDeviceInfo.TransportDecodeMessage     = SpdmTransportPciDoeDecodeMessage;
+
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+    SpdmDeviceInfo.TransportEncodeMessage     = SpdmTransportPciDoeEncodeMessage;
+    SpdmDeviceInfo.TransportDecodeMessage     = SpdmTransportPciDoeDecodeMessage;
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    SpdmDeviceInfo.TransportEncodeMessage     = SpdmTransportMctpEncodeMessage;
+    SpdmDeviceInfo.TransportDecodeMessage     = SpdmTransportMctpDecodeMessage;
+  }
 
   SpdmDeviceInfo.SenderBufferSize           = LIBSPDM_MAX_SPDM_MSG_SIZE;
   SpdmDeviceInfo.ReceiverBufferSize         = LIBSPDM_MAX_SPDM_MSG_SIZE;
@@ -355,26 +426,46 @@ DeviceAuthentication (
   DeviceSecurityState.MeasurementState    = 0x0;
   DeviceSecurityState.AuthenticationState = 0x0;
 
-  /* Just install SpdmIoProtocol if exists PciDoeProtocol */
-  BufferSize = sizeof (Handle);
-  Status     = gBS->LocateHandle (
-                      ByProtocol,
-                      &gEdkiiPciDoeProtocol,
-                      NULL,
-                      &BufferSize,
-                      &Handle
-                      );
-  if (Status != EFI_SUCCESS) {
-    return EFI_SUCCESS;
-  }
+  if (BusType == SPDM_DEVICE_PCI_TYPE) {
+      // Just install SpdmIoProtocol if exists PciDoeProtocol
+      BufferSize = sizeof (Handle);
+      Status     = gBS->LocateHandle (
+                          ByProtocol,
+                          &gEdkiiPciDoeProtocol,
+                          NULL,
+                          &BufferSize,
+                          &Handle
+                          );
+      if (Status != EFI_SUCCESS) {
+        return EFI_SUCCESS;
+      }
 
-  Status = gBS->HandleProtocol (
-                  Handle,
-                  &gEdkiiPciDoeProtocol,
-                  (VOID **)&PciDoeProtocol
-                  );
-  if ((Status != EFI_SUCCESS) && (PciDoeProtocol != NULL)) {
-    return EFI_SUCCESS;
+      Status = gBS->HandleProtocol (
+                      Handle,
+                      &gEdkiiPciDoeProtocol,
+                      (VOID **)&PciDoeProtocol
+                      );
+      if (PciDoeProtocol == NULL) {
+        return EFI_SUCCESS;
+      }
+  } else if (BusType == SPDM_DEVICE_USB_TYPE) {
+    BufferSize = sizeof (Handle);
+    Status     = gBS->LocateHandle (
+                        ByProtocol,
+                        &gEdkiiUsbSpdmProtocolGuid,
+                        NULL,
+                        &BufferSize,
+                        &Handle
+                        );
+
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEdkiiUsbSpdmProtocolGuid,
+                    (VOID **)&UsbSpdm
+                    );
+    if (UsbSpdm == NULL) {
+      return EFI_SUCCESS;
+    }
   }
 
   /**
