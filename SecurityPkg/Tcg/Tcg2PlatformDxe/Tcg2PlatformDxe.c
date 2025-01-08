@@ -46,7 +46,7 @@ SmmReadyToLockEventCallBack (
     return;
   }
 
-  ConfigureTpmPlatformHierarchy ();
+  // ConfigureTpmPlatformHierarchy ();
 
   gBS->CloseEvent (Event);
 }
