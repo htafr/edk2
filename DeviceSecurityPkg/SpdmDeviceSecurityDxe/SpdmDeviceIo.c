@@ -302,7 +302,6 @@ InstallSpdmIoProtocol (
   EFI_HANDLE  *Handle
   )
 {
-    DEBUG ((DEBUG_INFO, "\n\n\n[EDKII @ %a]: DeviceHandle - 0x%X\n\n\n\n", __func__, Handle));
   return gBS->InstallProtocolInterface (
                 Handle,
                 &gSpdmIoProtocolGuid,
