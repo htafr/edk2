@@ -40,4 +40,4 @@
   gEfiDxeSmmReadyToLockProtocolGuid             ## SOMETIMES_CONSUMES ## NOTIFY
 
 [Depex]
-  gEfiTcg2ProtocolGuid
+  gEfiTcg2ProtocolGuid AND gEdkiiUsbSpdmProtocolGuid

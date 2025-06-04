@@ -52,7 +52,7 @@ GetDeviceMeasurementContextSize (
 
   if (CompareGuid (&SpdmDeviceContext->DeviceId.DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid)) {
     // TBD - usb context
-    return 0;
+    return sizeof (TCG_DEVICE_SECURITY_EVENT_DATA_USB_CONTEXT);
   }
 
   return 0;
@@ -108,6 +108,35 @@ CreatePciDeviceMeasurementContext (
 }
 
 /**
+  This function creates the SPDM USB device measurement context for TCG SPDM event.
+
+  @param[in]       SpdmDeviceContext       The SPDM context for the device.
+  @param[in, out]  DeviceContext           The TCG SPDM PCI device measurement context.
+  @param[in]       DeviceContextSize       The size of TCG SPDM PCI device measurement context.
+
+  @retval EFI_SUCCESS      The TCG SPDM USB device measurement context is returned.
+**/
+EFI_STATUS
+CreateUsbDeviceMeasurementContext (
+  IN  SPDM_DEVICE_CONTEXT  *SpdmDeviceContext,
+  IN OUT VOID              *DeviceContext,
+  IN UINTN                 DeviceContextSize
+  )
+{
+  TCG_DEVICE_SECURITY_EVENT_DATA_USB_CONTEXT  *UsbContext;
+
+  if (DeviceContextSize != sizeof (*UsbContext)) {
+    return EFI_BUFFER_TOO_SMALL;
+  }
+
+  UsbContext          = DeviceContext;
+  UsbContext->Version = TCG_DEVICE_SECURITY_EVENT_DATA_USB_CONTEXT_VERSION;
+  UsbContext->Length  = sizeof (*UsbContext);
+
+  return EFI_SUCCESS;
+}
+
+/**
   This function creates the SPDM device measurement context for TCG SPDM event.
 
   @param[in]       SpdmDeviceContext       The SPDM context for the device.
@@ -130,7 +159,7 @@ CreateDeviceMeasurementContext (
   }
 
   if (CompareGuid (&SpdmDeviceContext->DeviceId.DeviceType, &gEdkiiDeviceIdentifierTypeUsbGuid)) {
-    return EFI_UNSUPPORTED;
+    return CreateUsbDeviceMeasurementContext (SpdmDeviceContext, DeviceContext, DeviceContextSize);
   }
 
   return EFI_UNSUPPORTED;

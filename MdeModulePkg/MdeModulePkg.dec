@@ -741,6 +741,9 @@
   ## Include/Protocol/PlatformBootManager.h
   gEdkiiPlatformBootManagerProtocolGuid = { 0xaa17add4, 0x756c, 0x460d, { 0x94, 0xb8, 0x43, 0x88, 0xd7, 0xfb, 0x3e, 0x59 } }
 
+  ## Include/Protocol/PciDoe.h
+  gEdkiiPciDoeProtocol                  = { 0x8c7cf9ad, 0x6c70, 0x4eac, { 0xb6, 0x05, 0xd0, 0x9b, 0x4e, 0x5b, 0xe3, 0x19 } }
+
 #
 # [Error.gEfiMdeModulePkgTokenSpaceGuid]
 #   0x80000001 | Invalid value provided.
@@ -2239,12 +2242,12 @@
   #  105: This is the first revision to support 800-155 is related event, such as
   #       EV_EFI_PLATFORM_FIRMWARE_BLOB2 and EV_EFI_HANDOFF_TABLES2.
   # @Prompt TCG Platform Firmware Profile revision.
-  gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision|0|UINT32|0x00010077
+  gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision|106|UINT32|0x00010077
 
   ## Specify whether to enable the state of SPDM device authentication and measurement.<BR><BR>
   #  0: Platform Firmware not supports SPDM device authentication and measurement.
   #  1: Platform Firmware supports SPDM device authentication and measurement.
-  gEfiMdeModulePkgTokenSpaceGuid.PcdEnableSpdmDeviceAuthentication|0|UINT8|0x00010033
+  gEfiMdeModulePkgTokenSpaceGuid.PcdEnableSpdmDeviceAuthentication|1|UINT8|0x00010033
 
   ## Indicates if StatusCode is reported via Serial port.<BR><BR>
   #   TRUE  - Reports StatusCode via Serial port.<BR>

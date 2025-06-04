@@ -326,7 +326,25 @@ typedef UINT32 TPM_CC;
 #define TPM_CC_PolicyPassword              (TPM_CC)(0x0000018C)
 #define TPM_CC_ZGen_2Phase                 (TPM_CC)(0x0000018D)
 #define TPM_CC_EC_Ephemeral                (TPM_CC)(0x0000018E)
-#define TPM_CC_LAST                        (TPM_CC)(0x0000018E)
+#define TPM_CC_PolicyNvWritten             (TPM_CC)(0x0000018F)
+#define TPM_CC_PolicyTemplate              (TPM_CC)(0x00000190)
+#define TPM_CC_CreateLoaded                (TPM_CC)(0x00000191)
+#define TPM_CC_PolicyAuthorizeNV           (TPM_CC)(0x00000192)
+#define TPM_CC_EncryptDecrypt2             (TPM_CC)(0x00000193)
+#define TPM_CC_AC_GetCapability            (TPM_CC)(0x00000194)
+#define TPM_CC_AC_Send                     (TPM_CC)(0x00000195)
+#define TPM_CC_Policy_AC_SendSelect        (TPM_CC)(0x00000196)
+#define TPM_CC_CertifyX509                 (TPM_CC)(0x00000197)
+#define TPM_CC_ACT_SetTimeout              (TPM_CC)(0x00000198)
+#define TPM_CC_ECC_Encrypt		             (TPM_CC)(0x00000199)
+#define TPM_CC_ECC_Decrypt		             (TPM_CC)(0x0000019A)
+#define TPM_CC_PolicyCapability            (TPM_CC)(0x0000019B)
+#define TPM_CC_PolicyParameters            (TPM_CC)(0x0000019C)
+#define TPM_CC_NV_DefineSpace2             (TPM_CC)(0x0000019D)
+#define TPM_CC_NV_ReadPublic2              (TPM_CC)(0x0000019E)
+#define TPM_CC_SetCapability               (TPM_CC)(0x0000019F)
+#define TPM_CC_SPDM                        (TPM_CC)(0x000001A0)
+#define TPM_CC_LAST                        (TPM_CC)(0x000001A0)
 
 // Table 15 - TPM_RC Constants (Actions)
 typedef UINT32 TPM_RC;
@@ -782,7 +800,8 @@ typedef struct {
   UINT32    phEnable     : 1;
   UINT32    shEnable     : 1;
   UINT32    ehEnable     : 1;
-  UINT32    reserved3_30 : 28;
+  UINT32    phEnableNV   : 1;
+  UINT32    reserved4_30 : 27;
   UINT32    orderly      : 1;
 } TPMA_STARTUP_CLEAR;
 

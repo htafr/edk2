@@ -431,6 +431,11 @@ INF OvmfPkg/Tcg/TdTcg2Dxe/TdTcg2Dxe.inf
 INF MdeModulePkg/Universal/SmbiosMeasurementDxe/SmbiosMeasurementDxe.inf
 !endif
 
+!if $(LIBSPDM_ENABLE)
+  INF DeviceSecurityPkg/DeployCert/DeployCert.inf
+  INF DeviceSecurityPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
+!endif
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]

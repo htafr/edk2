@@ -181,4 +181,6 @@ typedef struct {
 
 #pragma pack()
 
+#define EFI_PCIE_CAPABILITY_ID_DOE 0x2E
+
 #endif
