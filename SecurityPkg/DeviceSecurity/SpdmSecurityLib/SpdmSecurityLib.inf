@@ -47,9 +47,8 @@
 [Guids]
   gEfiDeviceSignatureDatabaseGuid         ## CONSUMES
   gEfiCertX509Guid                        ## CONSUMES
-  gEfiDeviceSecurityConfig                ## CONSUMES
   gEfiDeviceSecuritySpdmUidGuid           ## PRODUCES AND CONSUMES
 
 [Pcd]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision             ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision            ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdEnableSpdmDeviceAuthentication        ## CONSUMES

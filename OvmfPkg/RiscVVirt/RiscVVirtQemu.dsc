@@ -31,9 +31,9 @@
   # -D FLAG=VALUE
   #
   DEFINE TTY_TERMINAL            = FALSE
-  DEFINE SECURE_BOOT_ENABLE      = TRUE
-  DEFINE TPM2_ENABLE             = TRUE
-  DEFINE TPM2_CONFIG_ENABLE      = TRUE
+  DEFINE SECURE_BOOT_ENABLE      = FALSE
+  DEFINE TPM2_ENABLE             = FALSE
+  DEFINE TPM2_CONFIG_ENABLE      = FALSE
   DEFINE DEBUG_ON_SERIAL_PORT    = TRUE
 
   #
@@ -56,11 +56,9 @@
   !error "NETWORK_SNP_ENABLE is IA32/X64/EBC only"
 !endif
 
-  DEFINE LIBSPDM_ENABLE          = TRUE
 
 !include MdePkg/MdeLibs.dsc.inc
 !include NetworkPkg/Network.dsc.inc
-!include OvmfPkg/Include/Dsc/SpdmDeviceSecurityDxe.dsc.inc
 
 [BuildOptions]
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG

@@ -212,7 +212,6 @@ typedef enum {
   USB_REQ_GET_INTERFACE  = 0x0A,
   USB_REQ_SET_INTERFACE  = 0x0B,
   USB_REQ_SYNCH_FRAME    = 0x0C,
-  USB_REQ_SPDM           = 0x32,
 
   //
   // Usb control transfer target

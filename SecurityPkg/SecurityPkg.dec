@@ -246,7 +246,6 @@
   ## TPM Service over FF-A
   #  Include/Guid/Tpm2ServiceFfa.h
   gTpm2ServiceFfaGuid = { 0x17b862a4, 0x1806, 0x4faf, { 0x86, 0xb3, 0x08, 0x9a, 0x58, 0x35, 0x38, 0x61 } }
-  gEfiDeviceSecurityConfig              = {0x6761aa6c, 0x41bf, 0x4a38, {0x84, 0x93, 0x26, 0x6b, 0x11, 0x98, 0x44, 0xfc}}
 
 [Ppis]
   ## The PPI GUID for that TPM physical presence should be locked.
@@ -499,7 +498,7 @@
   ## This PCD defines minimum length(in bytes) of the system preboot TCG event log area(LAML).
   #  For PC Client Implementation spec up to and including 1.2 the minimum log size is 64KB.
   # @Prompt Minimum length(in bytes) of the system preboot TCG event log area(LAML).
-  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0xF0000|UINT32|0x00010017
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0x10000|UINT32|0x00010017
 
   ## This PCD defines length(in bytes) of the TCG2 Final event log area.
   # @Prompt Length(in bytes) of the TCG2 Final event log area.

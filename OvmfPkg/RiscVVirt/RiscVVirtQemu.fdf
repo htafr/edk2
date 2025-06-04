@@ -72,10 +72,6 @@ INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
 INF  OvmfPkg/Fdt/VirtioFdtDxe/VirtioFdtDxe.inf
 INF  EmbeddedPkg/Drivers/FdtClientDxe/FdtClientDxe.inf
 INF  OvmfPkg/Fdt/HighMemDxe/HighMemDxe.inf
-!if $(LIBSPDM_ENABLE)
-  INF DeviceSecurityPkg/DeployCert/DeployCert.inf
-  INF DeviceSecurityPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
-!endif
 
 #
 # PI DXE Drivers producing Architectural Protocols (EFI Services)

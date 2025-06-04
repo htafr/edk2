@@ -40,12 +40,10 @@
   UsbUtility.c
   UsbDesc.h
   UsbBus.h
-  UsbSpdm.c
-  UsbSpdm.h
 
 [Packages]
   MdePkg/MdePkg.dec
-  MdeModulePkg/MdeModulePkg.dec
+
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -57,16 +55,13 @@
   DebugLib
   ReportStatusCodeLib
 
+
 [Protocols]
   gEfiUsbIoProtocolGuid                         ## BY_START
   ## TO_START
   ## BY_START
   gEfiDevicePathProtocolGuid
   gEfiUsb2HcProtocolGuid                        ## TO_START
-  gEfiUsbHcProtocolGuid                         ## TO_START
-  gEdkiiDeviceSecurityProtocolGuid              ## SOMETIMES_CONSUMES
-  gEdkiiDeviceIdentifierTypeUsbGuid             ## SOMETIMES_CONSUMES
-  gEdkiiUsbSpdmProtocolGuid                     ## SOMETIMES_PRODUCES
 
 # [Event]
 #

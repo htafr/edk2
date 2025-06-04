@@ -43,8 +43,6 @@
   PciDriverOverride.c
   PciPowerManagement.c
   PciPowerManagement.h
-  PciDoe.c
-  PciDoe.h
   PciDriverOverride.h
   PciRomTable.c
   PciHotPlugSupport.c
@@ -95,7 +93,6 @@
   gEdkiiDeviceSecurityProtocolGuid                ## SOMETIMES_CONSUMES
   gEdkiiDeviceIdentifierTypePciGuid               ## SOMETIMES_CONSUMES
   gEfiLoadedImageDevicePathProtocolGuid           ## CONSUMES
-  gEdkiiPciDoeProtocol                            ## SOMETIMES_PRODUCES
 
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciBusHotplugDeviceSupport      ## CONSUMES
