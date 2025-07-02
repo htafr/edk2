@@ -202,11 +202,11 @@ INF  FILE_GUID = $(UP_CPU_PEI_GUID) UefiCpuPkg/CpuMpPei/CpuMpPei.inf
 #
 # Usb Support
 #
-INF  MdeModulePkg/Bus/Pci/UhciPei/UhciPei.inf
-INF  MdeModulePkg/Bus/Pci/EhciPei/EhciPei.inf
-INF  MdeModulePkg/Bus/Pci/XhciPei/XhciPei.inf
-INF  MdeModulePkg/Bus/Usb/UsbBusPei/UsbBusPei.inf
-INF  DeviceSecurityPkg/SpdmDeviceSecurityPei/SpdmDeviceSecurityPei.inf
+#INF  MdeModulePkg/Bus/Pci/UhciPei/UhciPei.inf
+#INF  MdeModulePkg/Bus/Pci/EhciPei/EhciPei.inf
+#INF  MdeModulePkg/Bus/Pci/XhciPei/XhciPei.inf
+#INF  MdeModulePkg/Bus/Usb/UsbBusPei/UsbBusPei.inf
+#INF  DeviceSecurityPkg/SpdmDeviceSecurityPei/SpdmDeviceSecurityPei.inf
 
 ################################################################################
 
