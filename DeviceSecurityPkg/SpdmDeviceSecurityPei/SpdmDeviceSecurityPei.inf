@@ -18,16 +18,16 @@
 [Sources]
   SpdmDeviceSecurityPei.h
   SpdmDeviceSecurityPei.c
-  SpdmDeviceMeasurement.c
-  SpdmDeviceAuthentication.c
-  SpdmCommunication.c
-  SpdmDeviceIo.c
+  #SpdmDeviceMeasurement.c
+  #SpdmDeviceAuthentication.c
+  #SpdmCommunication.c
+  #SpdmDeviceIo.c
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   CryptoPkg/CryptoPkg.dec
-  DeviceSecurityTestPkg/DeviceSecurityTestPkg.dec
+  DeviceSecurityPkg/DeviceSecurityPkg.dec
   SecurityPkg/SecurityPkg.dec
 
 [LibraryClasses]
@@ -47,14 +47,14 @@
 
 [Ppis]
   gEdkiiDeviceSecurityPpiGuid             ## PRODUCES
-  gEdkiiDeviceSecurityPolicyPpiGuid       ## CONSUMES
+  gEdkiiDeviceSecurityPolicyPpiGuid       ## PRODUCES
   gSpdmIoPpiGuid                          ## CONSUMES
   gSpdmPpiGuid                            ## PRODUCES
   gEfiPeiReadOnlyVariable2PpiGuid         ## CONSUMES
 
 [Guids]
-  gEfiDeviceSignatureDatabaseGuid       ## CONSUMES
-  gEdkiiCertSpdmCertChainGuid             ## CONSUMES
+  gEfiDeviceSignatureDatabaseGuid          ## CONSUMES
+  #gEdkiiCertSpdmCertChainGuid             ## CONSUMES
 
 [Protocols]
   gEdkiiDeviceIdentifierTypePciGuid       ## COMSUMES
@@ -68,5 +68,5 @@
   gEfiDeviceSecurityPkgTokenSpaceGuid.PcdSpdmKeySchedule      ## COMSUMES
 
 [Depex]
-  gEdkiiDeviceSecurityPolicyPpiGuid AND
-  gSpdmIoPpiGuid
+  TRUE
+

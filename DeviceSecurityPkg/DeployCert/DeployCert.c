@@ -334,7 +334,7 @@ MainEntryPoint (
 
   CertChain     = RequesterPublicCertificateChainData;
   CertChainSize = RequesterPublicCertificateChainDataSize;
-  HashSize      = SHA256_HASH_SIZE;
+  HashSize      = SHA384_HASH_SIZE;
   RootKey       = TestRootKey;
   RootKeySize   = TestRootKeySize;
   RootCert      = ResponderPublicCertificateChainHash;
@@ -347,29 +347,75 @@ MainEntryPoint (
   // which matches the cert chain of the responder.
   //
   SignatureHeaderSize = 0;
-  DbSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
+  DbSize = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
   DbList        = AllocateZeroPool (DbSize);
   ASSERT (DbList != NULL);
   SignatureList = DbList;
-  SignatureListSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + 2 * (sizeof (EFI_GUID) + RootCertSize);
+  SignatureListSize   = sizeof (EFI_SIGNATURE_LIST) + SignatureHeaderSize + sizeof (EFI_GUID) + RootCertSize;
   CopyGuid (&SignatureList->SignatureType, &gEfiCertX509Guid);
   SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
   SignatureList->SignatureHeaderSize = (UINT32)SignatureHeaderSize;
   SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_GUID) + RootCertSize);
   CertData                           = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
   CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+
+  DEBUG ((
+    DEBUG_INFO,
+    "DeployCert:\n"
+    "\tSignatureType - %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n"
+    "\tSignatureListSize - %08x\n"
+    "\tSignatureHeaderSize - %08x\n"
+    "\tSignatureSize - %08x\n"
+    "\tSignatureOwner - %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n"
+    ,
+    SwapBytes32(SignatureList->SignatureType.Data1),
+    SwapBytes16(SignatureList->SignatureType.Data2),
+    SwapBytes16(SignatureList->SignatureType.Data3),
+    SignatureList->SignatureType.Data4[0], SignatureList->SignatureType.Data4[1],
+    SignatureList->SignatureType.Data4[2], SignatureList->SignatureType.Data4[3],
+    SignatureList->SignatureType.Data4[4], SignatureList->SignatureType.Data4[5],
+    SignatureList->SignatureType.Data4[6], SignatureList->SignatureType.Data4[7],
+    SwapBytes32(SignatureList->SignatureListSize),
+    SwapBytes32(SignatureList->SignatureHeaderSize),
+    SwapBytes32(SignatureList->SignatureSize),
+    SwapBytes32(CertData->SignatureOwner.Data1),
+    SwapBytes16(CertData->SignatureOwner.Data2),
+    SwapBytes16(CertData->SignatureOwner.Data3),
+    CertData->SignatureOwner.Data4[0], CertData->SignatureOwner.Data4[1],
+    CertData->SignatureOwner.Data4[2], CertData->SignatureOwner.Data4[3],
+    CertData->SignatureOwner.Data4[4], CertData->SignatureOwner.Data4[5],
+    CertData->SignatureOwner.Data4[6], CertData->SignatureOwner.Data4[7]
+  ));
+
   CopyMem (
     (UINT8 *)CertData->SignatureData,
     RootCert,
     RootCertSize
     );
-  CertData = (EFI_SIGNATURE_DATA *)((UINT8 *)CertData + SignatureList->SignatureSize);
-  CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
-  CopyMem (
-    (UINT8 *)CertData->SignatureData,
-    RootCert,
-    RootCertSize
-    );
+
+  // for (UINTN i = 0; i < RootCertSize; i++)
+  //   DEBUG ((DEBUG_INFO, "%02X ", *((UINT8 *)CertData->SignatureData + i)));
+  // DEBUG ((DEBUG_INFO, "\n"));
+
+  // CertData = (EFI_SIGNATURE_DATA *)((UINT8 *)CertData + SignatureList->SignatureSize);
+  // CopyGuid (&CertData->SignatureOwner, &gEfiCallerIdGuid);
+  // CopyMem (
+  //   (UINT8 *)CertData->SignatureData,
+  //   RootCert,
+  //   RootCertSize
+  //   );
+
+  // for (UINTN i = 0; i < RootCertSize; i++)
+  //   DEBUG ((DEBUG_INFO, "%02X ", *((UINT8 *)CertData->SignatureData + i)));
+  // DEBUG ((DEBUG_INFO, "\n"));
+
+  // DEBUG ((DEBUG_INFO, "devdb:\n"));
+  // for (UINTN i = 0; i < DbSize ; i++) {
+  //   if ((i % 16 == 0) && (i != 0)) DEBUG ((DEBUG_INFO, "\n"));
+  //   DEBUG ((DEBUG_INFO, "%02X ", *((UINT8 *)DbList + i)));
+  // }
+  // DEBUG ((DEBUG_INFO, "\n"));
+
 
   /*
   RootCert = TestRootCer;
@@ -456,7 +502,7 @@ MainEntryPoint (
   //*/
 
   CopyMem (
-    (UINT8 *)RequesterCertChain + sizeof (SPDM_CERT_CHAIN) + HashSize,
+    (UINT8 *)RequesterCertChain,
     CertChain,
     CertChainSize
     );

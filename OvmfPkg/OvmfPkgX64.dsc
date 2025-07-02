@@ -29,7 +29,7 @@
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE
   #
-  DEFINE SECURE_BOOT_ENABLE      = TRUE
+  DEFINE SECURE_BOOT_ENABLE      = FALSE
   DEFINE SMM_REQUIRE             = FALSE
   DEFINE SOURCE_DEBUG_ENABLE     = FALSE
   DEFINE CC_MEASUREMENT_ENABLE   = TRUE
@@ -39,7 +39,7 @@
   #
   # Shell can be useful for debugging but should not be enabled for production
   #
-  DEFINE BUILD_SHELL             = FALSE
+  DEFINE BUILD_SHELL             = TRUE
 
   #
   # Network definition
@@ -79,7 +79,7 @@
 !endif
 !endif
 
-  DEFINE LIBSPDM_ENABLE          = TRUE
+  DEFINE LIBSPDM_ENABLE          = FALSE
   DEFINE DEBUG_ON_SERIAL_PORT    = TRUE
 
   #

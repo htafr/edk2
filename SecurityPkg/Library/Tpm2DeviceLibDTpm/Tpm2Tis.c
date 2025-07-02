@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/IoLib.h>
 #include <Library/TimerLib.h>
 #include <Library/DebugLib.h>
@@ -151,42 +152,6 @@ TisPcPrepareCommand (
              TIS_PC_STS_READY,
              0,
              TIS_TIMEOUT_B
-             );
-  return Status;
-}
-
-/**
-  Get the control of TPM chip by sending requestUse command TIS_PC_ACC_RQUUSE
-  to ACCESS Register in the time of default TIS_TIMEOUT_A.
-
-  @param[in] TisReg                Pointer to TIS register.
-
-  @retval    EFI_SUCCESS           Get the control of TPM chip.
-  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
-  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
-  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
-**/
-EFI_STATUS
-TisPcRequestUseTpm (
-  IN      TIS_PC_REGISTERS_PTR  TisReg
-  )
-{
-  EFI_STATUS  Status;
-
-  if (TisReg == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  if (!TisPcPresenceCheck (TisReg)) {
-    return EFI_NOT_FOUND;
-  }
-
-  MmioWrite8 ((UINTN)&TisReg->Access, TIS_PC_ACC_RQUUSE);
-  Status = TisPcWaitRegisterBits (
-             &TisReg->Access,
-             (UINT8)(TIS_PC_ACC_ACTIVE |TIS_PC_VALID),
-             0,
-             TIS_TIMEOUT_A
              );
   return Status;
 }
@@ -404,6 +369,79 @@ Exit:
   DEBUG ((DEBUG_VERBOSE, "\n"));
   DEBUG_CODE_END ();
   MmioWrite8 ((UINTN)&TisReg->Status, TIS_PC_STS_READY);
+  return Status;
+}
+
+/**
+  Get the control of TPM chip by sending requestUse command TIS_PC_ACC_RQUUSE
+  to ACCESS Register in the time of default TIS_TIMEOUT_A.
+
+  @param[in] TisReg                Pointer to TIS register.
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+TisPcRequestUseTpm (
+  IN      TIS_PC_REGISTERS_PTR  TisReg
+  )
+{
+  EFI_STATUS  Status;
+  UINT8 GET_VERSION[] = { 0x05, 0x10, 0x84, 0x00, 0x00 };
+  UINT8 *Out = NULL;
+  UINT32 *OutSize = NULL;
+  VOID *Cmd = NULL;
+  UINT32 CmdSize = 0;
+  UINT8 *Data8 = NULL;
+  UINT16 *Data16 = NULL;
+  UINT32 *Data32 = NULL;
+
+  if (TisReg == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (!TisPcPresenceCheck (TisReg)) {
+    return EFI_NOT_FOUND;
+  }
+
+  MmioWrite8 ((UINTN)&TisReg->Access, TIS_PC_ACC_RQUUSE);
+  Status = TisPcWaitRegisterBits (
+             &TisReg->Access,
+             (UINT8)(TIS_PC_ACC_ACTIVE |TIS_PC_VALID),
+             0,
+             TIS_TIMEOUT_A
+             );
+  if (EFI_ERROR (Status)) {
+    return EFI_DEVICE_ERROR;
+  }
+
+  CmdSize = sizeof (UINT16) + 2 * sizeof (UINT32) + sizeof (GET_VERSION);
+  Cmd = AllocateZeroPool (CmdSize);
+  Data16 = (UINT16 *)Cmd;
+  *Data16 = SwapBytes16 (TPM_ST_NULL);
+  Data32 = (UINT32 *)((UINT8 *)Cmd + sizeof (UINT16));
+  *Data32 = SwapBytes32(CmdSize);
+  Data32 += 1;
+  *Data32 = 0xdeadbeef;
+  Data8 = (UINT8 *)((UINT8 *)Cmd + sizeof (UINT16) + 2 * sizeof (UINT32));
+  CopyMem (Data8, GET_VERSION, sizeof (GET_VERSION));
+
+  DEBUG ((DEBUG_INFO, "\n\n\n\n"));
+  DEBUG ((DEBUG_INFO, "CmdSize - %04X\n", CmdSize));
+  for (UINTN i = 0 ; i < CmdSize ; i++)
+    DEBUG ((DEBUG_INFO, "%02X ", ((UINT8 *)Cmd)[i]));
+  DEBUG ((DEBUG_INFO, "\n\n\n\n"));
+
+  Status = Tpm2TisTpmCommand (
+              TisReg,
+              (UINT8 *)Cmd,
+              sizeof ((UINT8 *)Cmd),
+              Out,
+              OutSize
+              );
+
   return Status;
 }
 

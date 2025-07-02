@@ -243,6 +243,7 @@ DEFINE CRYPT_LIB = OPENSSL
 ###################################################################################################
 
 [Components]
+  DeviceSecurityPkg/SpdmDeviceSecurityPei/SpdmDeviceSecurityPei.inf
   DeviceSecurityPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf
   DeviceSecurityPkg/DeployCert/DeployCert.inf {
   <LibraryClasses>

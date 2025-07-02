@@ -33,6 +33,7 @@
   UefiRuntimeServicesTableLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
+  #UefiApplicationEntryPoint
   MemoryAllocationLib
   DevicePathLib
   BaseMemoryLib
@@ -41,6 +42,7 @@
   BaseCryptLib
   TpmMeasurementLib
   Tpm2CommandLib
+  #ShellLib
 
 [Guids]
   gEfiDeviceSignatureDatabaseGuid         ## PRODUCES
