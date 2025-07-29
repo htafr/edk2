@@ -1125,37 +1125,26 @@ X509GetIssuerName (
 {
   mbedtls_x509_crt  Crt;
   INT32             Ret;
-  BOOLEAN           Status;
 
   if (Cert == NULL) {
     return FALSE;
   }
-
-  Status = FALSE;
 
   mbedtls_x509_crt_init (&Crt);
 
   Ret = mbedtls_x509_crt_parse_der (&Crt, Cert, CertSize);
 
   if (Ret == 0) {
-    if (*CertIssuerSize < Crt.serial.len) {
-      *CertIssuerSize = Crt.serial.len;
-      Status          = FALSE;
-      goto Cleanup;
-    }
-
     if (CertIssuer != NULL) {
-      CopyMem (CertIssuer, Crt.serial.p, Crt.serial.len);
+      CopyMem (CertIssuer, Crt.issuer_raw.p, Crt.issuer_raw.len);
     }
 
-    *CertIssuerSize = Crt.serial.len;
-    Status          = TRUE;
+    *CertIssuerSize = Crt.issuer_raw.len;
   }
 
-Cleanup:
   mbedtls_x509_crt_free (&Crt);
 
-  return Status;
+  return Ret == 0;
 }
 
 /**
