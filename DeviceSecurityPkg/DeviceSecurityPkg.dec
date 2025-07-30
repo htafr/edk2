@@ -17,9 +17,12 @@
   ../SecurityPkg/Include
   ../SecurityPkg/DeviceSecurity/SpdmLib/Include
   ../SecurityPkg/DeviceSecurity/SpdmLib/libspdm/include
+  ../SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib
   ../SecurityPkg/DeviceSecurity/SpdmSecurityLib
 
 [LibraryClasses]
+  PeiSpdmSecurityLib|SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib/PeiDeviceSecurityLib.inf
+
   ##  @libraryclass Perform SPDM (following SPDM spec) and measure data to TPM (following TCG PFP spec).
   ##
   SpdmSecurityLib|SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
