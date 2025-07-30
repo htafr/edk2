@@ -425,6 +425,21 @@ TisPcRequestUseTpm (
   );
 
 /**
+  Authenticate and Measure TPM device
+
+  @param[in] TisReg                Pointer to TIS register.
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+TisPcSpdmTpm (
+  IN      TIS_PC_REGISTERS_PTR  TisReg
+  );
+
+/**
   Return PTP interface type.
 
   @param[in] Register                Pointer to PTP register.
@@ -643,6 +658,31 @@ DTpm2RequestUseTpm (
     case Tpm2PtpInterfaceFifo:
     case Tpm2PtpInterfaceTis:
       return TisPcRequestUseTpm ((TIS_PC_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
+    default:
+      return EFI_NOT_FOUND;
+  }
+}
+/**
+  Authenticate and Measure TPM device
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+EFIAPI
+DTpm2SpdmTpm (
+  VOID
+  )
+{
+  TPM2_PTP_INTERFACE_TYPE   PtpInterface;
+
+  PtpInterface = GetCachedPtpInterface ();
+  switch (PtpInterface) {
+    case Tpm2PtpInterfaceFifo:
+    case Tpm2PtpInterfaceTis:
+      return TisPcSpdmTpm ((TIS_PC_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
     default:
       return EFI_NOT_FOUND;
   }

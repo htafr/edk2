@@ -271,6 +271,21 @@
   ## Include/Ppi/CcMeasurement.h
   gEdkiiCcPpiGuid = { 0x8c8f17c3, 0xbb8d, 0x4d4e, { 0x96, 0x0e, 0xd3, 0x33, 0xcf, 0x2b, 0xcb, 0x20 }}
 
+  ## Include/Ppi/DeviceSecurity.h
+  gEdkiiDeviceSecurityPpiGuid = {0x4b05faa, 0x7f36, 0x4dc5, {0xbf, 0xb3, 0x42, 0xde, 0x30, 0xbc, 0x3d, 0x80}}
+
+  ## Include/Ppi/DeviceSecurityPolicy.h
+  gEdkiiDeviceSecurityPolicyPpiGuid   = {0x5b7b8831, 0xb15b, 0x4e39, {0xad, 0xfc, 0x88, 0x4d, 0x5a, 0x89, 0xf7, 0x4a}}
+
+  ## Include/Ppi/SpdmIo.h
+  gSpdmIoPpiGuid                 = {0x02320bff, 0x6b67, 0x4acc, {0x8b, 0x37, 0x45, 0xf4, 0x20, 0xfa, 0x9f, 0x98}}
+
+  ## Include/Ppi/Spdm.h
+  gSpdmPpiGuid            = {0x0a1227b3, 0x0f30, 0x4639, {0xbe, 0xb3, 0xb4, 0x60, 0x77, 0x35, 0xee, 0x89}}
+
+  ## Include/PrivateTest/Ppi/SpdmTest.h
+  gSpdmTestPpiGuid        = {0x9580d073, 0x5c95, 0x469f, {0x9a, 0xbe, 0xd4, 0xbc, 0xb7, 0x5f, 0xbf, 0x5c}}
+
 #
 # [Error.gEfiSecurityPkgTokenSpaceGuid]
 #   0x80000001 | Invalid value provided.
@@ -482,7 +497,7 @@
   ## This PCD defines minimum length(in bytes) of the system preboot TCG event log area(LAML).
   #  For PC Client Implementation spec up to and including 1.2 the minimum log size is 64KB.
   # @Prompt Minimum length(in bytes) of the system preboot TCG event log area(LAML).
-  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0xF0000|UINT32|0x00010017
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0x20000|UINT32|0x00010017
 
   ## This PCD defines length(in bytes) of the TCG2 Final event log area.
   # @Prompt Length(in bytes) of the TCG2 Final event log area.

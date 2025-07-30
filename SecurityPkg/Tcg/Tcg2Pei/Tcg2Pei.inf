@@ -55,6 +55,17 @@
   ReportStatusCodeLib
   ResetSystemLib
   PrintLib
+  SpdmDeviceSecretLib
+  SpdmCryptLib
+  SpdmCommonLib
+  SpdmRequesterLib
+  SpdmResponderLib
+  SpdmSecuredMessageLib
+  SpdmTransportMctpLib
+  SpdmTransportPciDoeLib
+  CryptlibWrapper
+  PlatformLibWrapper
+  MemLibWrapper
 
 [Guids]
   gTcgEventEntryHobGuid                                                ## PRODUCES               ## HOB

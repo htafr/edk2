@@ -1073,6 +1073,12 @@ PeimEntryMA (
       goto Done;
     }
 
+    Status = Tpm2SpdmTpm ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "TPM2 not authenticated/measured\n"));
+      // goto Done;
+    }
+
     S3ErrorReport = FALSE;
     if (PcdGet8 (PcdTpm2InitializationPolicy) == 1) {
       if (BootMode == BOOT_ON_S3_RESUME) {

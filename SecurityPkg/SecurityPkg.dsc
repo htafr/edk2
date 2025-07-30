@@ -118,6 +118,7 @@
   Tcg2PhysicalPresenceLib|SecurityPkg/Library/PeiTcg2PhysicalPresenceLib/PeiTcg2PhysicalPresenceLib.inf
   TpmMeasurementLib|SecurityPkg/Library/PeiTpmMeasurementLib/PeiTpmMeasurementLib.inf
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
+  PeiSpdmSecurityLib|SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib/PeiSpdmSecurityLib.inf
 
 [LibraryClasses.common.DXE_DRIVER]
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
@@ -291,6 +292,8 @@
   #
   # SPDM
   #
+  SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib/PeiSpdmSecurityLib.inf
+
   SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
   SecurityPkg/DeviceSecurity/SpdmLib/SpdmDeviceSecretLibNull.inf
   SecurityPkg/DeviceSecurity/SpdmLib/SpdmCryptLib.inf
@@ -340,6 +343,7 @@
       NULL|SecurityPkg/Library/HashInstanceLibSha384/HashInstanceLibSha384.inf
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
+      NULL|SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib/PeiSpdmSecurityLib.inf
   }
 
   SecurityPkg/Tcg/Tcg2PlatformPei/Tcg2PlatformPei.inf {

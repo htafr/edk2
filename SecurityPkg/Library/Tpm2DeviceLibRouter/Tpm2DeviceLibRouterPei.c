@@ -99,6 +99,30 @@ Tpm2RequestUseTpm (
 }
 
 /**
+  Authenticate and Measure TPM device
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+EFIAPI
+Tpm2SpdmTpm (
+  VOID
+  )
+{
+  TPM2_DEVICE_INTERFACE  *Tpm2DeviceInterface;
+
+  Tpm2DeviceInterface = InternalGetTpm2DeviceInterface ();
+  if (Tpm2DeviceInterface == NULL) {
+    return EFI_UNSUPPORTED;
+  }
+
+  return Tpm2DeviceInterface->Tpm2SpdmTpm ();
+}
+
+/**
   This service register TPM2 device.
 
   @param Tpm2Device  TPM2 device

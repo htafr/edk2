@@ -514,6 +514,8 @@ typedef UINT16 TPM_ST;
 #define TPM_ST_HASHCHECK             (TPM_ST)(0x8024)
 #define TPM_ST_AUTH_SIGNED           (TPM_ST)(0x8025)
 #define TPM_ST_FU_MANIFEST           (TPM_ST)(0x8029)
+#define TPM_ST_SPDM_CLEAR_MESSAGE    (TPM_ST)(0x8101)
+#define TPM_ST_SPDM_SECURED_MESSAGE  (TPM_ST)(0x8201)
 
 // Table 19 - TPM_SU Constants
 typedef UINT16 TPM_SU;
@@ -1817,6 +1819,14 @@ typedef struct {
   UINT32    paramSize;
   TPM_RC    responseCode;
 } TPM2_RESPONSE_HEADER;
+
+typedef struct {
+  TPM_ST    tag;
+  UINT32    paramSize;
+  UINT32    connectionHandle;
+  UINT16    fipsServiceIndicator;
+  UINT32    reserved;
+} TPM2_SPDM_HEADER;
 
 #pragma pack ()
 

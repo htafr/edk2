@@ -62,10 +62,25 @@ DTpm2RequestUseTpm (
   VOID
   );
 
+/**
+  Authenticate and Measure TPM device
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+EFIAPI
+DTpm2SpdmTpm (
+  VOID
+  );
+
 TPM2_DEVICE_INTERFACE  mDTpm2InternalTpm2Device = {
   TPM_DEVICE_INTERFACE_TPM20_DTPM,
   DTpm2SubmitCommand,
   DTpm2RequestUseTpm,
+  DTpm2SpdmTpm,
 };
 
 /**

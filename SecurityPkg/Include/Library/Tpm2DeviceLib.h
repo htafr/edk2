@@ -56,6 +56,20 @@ Tpm2RequestUseTpm (
   );
 
 /**
+  Authenticate and Measure TPM device
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+EFI_STATUS
+EFIAPI
+Tpm2SpdmTpm (
+  VOID
+  );
+
+/**
   This service enables the sending of commands to the TPM2.
 
   @param[in]      InputParameterBlockSize  Size of the TPM2 input parameter block.
@@ -89,10 +103,25 @@ EFI_STATUS
   VOID
   );
 
+/**
+  Authenticate and Measure TPM device
+
+  @retval    EFI_SUCCESS           Get the control of TPM chip.
+  @retval    EFI_INVALID_PARAMETER TisReg is NULL.
+  @retval    EFI_NOT_FOUND         TPM chip doesn't exit.
+  @retval    EFI_TIMEOUT           Can't get the TPM control in time.
+**/
+typedef
+EFI_STATUS
+(EFIAPI *TPM2_SPDM_TPM) (
+  VOID
+  );
+
 typedef struct {
   EFI_GUID                ProviderGuid;
   TPM2_SUBMIT_COMMAND     Tpm2SubmitCommand;
   TPM2_REQUEST_USE_TPM    Tpm2RequestUseTpm;
+  TPM2_SPDM_TPM           Tpm2SpdmTpm;
 } TPM2_DEVICE_INTERFACE;
 
 /**
