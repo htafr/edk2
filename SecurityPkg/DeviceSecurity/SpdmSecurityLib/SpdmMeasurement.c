@@ -174,7 +174,7 @@ CreateDeviceMeasurementContext (
 **/
 VOID
 EFIAPI
-InternalDumpData (
+SpdmInternalDumpData (
   CONST UINT8  *Data,
   UINTN        Size
   )
@@ -257,7 +257,7 @@ ExtendMeasurement (
     DEBUG ((DEBUG_INFO, "  DMTFSpecMeasurementValueType - 0x%02x\n", SpdmMeasurementBlockDmtfHeader->DMTFSpecMeasurementValueType));
     DEBUG ((DEBUG_INFO, "  DMTFSpecMeasurementValueSize - 0x%04x\n", SpdmMeasurementBlockDmtfHeader->DMTFSpecMeasurementValueSize));
     DEBUG ((DEBUG_INFO, "Measurement - "));
-    InternalDumpData (Digest, DigestSize);
+    SpdmInternalDumpData (Digest, DigestSize);
     DEBUG ((DEBUG_INFO, "\n"));
     if (MeasurementRecordLength <= sizeof (SPDM_MEASUREMENT_BLOCK_COMMON_HEADER) + sizeof (SPDM_MEASUREMENT_BLOCK_DMTF_HEADER)) {
       SecurityState->MeasurementState = EDKII_DEVICE_SECURITY_STATE_ERROR_MEASUREMENT_AUTH_FAILURE;
