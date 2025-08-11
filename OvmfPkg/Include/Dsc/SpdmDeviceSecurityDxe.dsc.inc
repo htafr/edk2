@@ -4,7 +4,7 @@
   DeviceSecurityPkg/SpdmDeviceSecurityDxe/SpdmDeviceSecurityDxe.inf {
     <LibraryClasses>
       SpdmSecurityLib|SecurityPkg/DeviceSecurity/SpdmSecurityLib/SpdmSecurityLib.inf
-      SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmDeviceSecretLibNull.inf
+      SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/DxeSpdmDeviceSecretLibSample.inf
       SpdmCryptLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCryptLib.inf
       SpdmCommonLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCommonLib.inf
       SpdmRequesterLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmRequesterLib.inf

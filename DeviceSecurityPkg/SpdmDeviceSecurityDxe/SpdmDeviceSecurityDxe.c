@@ -400,15 +400,15 @@ DeviceAuthentication (
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MULTI_KEY_CAP_NEG |
                                               0);
   SpdmDeviceInfo.CapabilityFlags            = 0;
-  SpdmDeviceInfo.BasicMutAuth               = 0;
+  SpdmDeviceInfo.BasicMutAuth               = 1;
   SpdmDeviceInfo.MutAuth                    = SPDM_KEY_EXCHANGE_RESPONSE_MUT_AUTH_REQUESTED_WITH_ENCAP_REQUEST;
   SpdmDeviceInfo.MeasurementSummaryHashType = SPDM_CHALLENGE_REQUEST_ALL_MEASUREMENTS_HASH;
   SpdmDeviceInfo.MeasurementOperation       = SPDM_GET_MEASUREMENTS_REQUEST_MEASUREMENT_OPERATION_TOTAL_NUMBER_OF_MEASUREMENTS;
   SpdmDeviceInfo.SlotId                     = 0;
   SpdmDeviceInfo.SlotCount                  = 3;
   SpdmDeviceInfo.MeasurementSpec            = SPDM_MEASUREMENT_SPECIFICATION_DMTF;
-  SpdmDeviceInfo.MeasurementHashAlgo        = SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_512 |
-                                              SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_384 |
+  SpdmDeviceInfo.BaseHashAlgo               = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_256;
+  SpdmDeviceInfo.MeasurementHashAlgo        = SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_384 |
                                               SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_256;
   SpdmDeviceInfo.ReqBaseAsymAlgo            = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_2048;
   SpdmDeviceInfo.DheAlgo                    = SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_384_R1 |

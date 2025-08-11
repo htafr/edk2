@@ -637,7 +637,7 @@ TisPcSpdmTpm (
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_MULTI_KEY_CAP_NEG |
                                               0);
   SpdmDeviceInfo.CapabilityFlags            = 0;
-  SpdmDeviceInfo.BasicMutAuth               = 0;
+  SpdmDeviceInfo.BasicMutAuth               = 1;
   SpdmDeviceInfo.MutAuth                    = SPDM_KEY_EXCHANGE_RESPONSE_MUT_AUTH_REQUESTED_WITH_ENCAP_REQUEST;
   SpdmDeviceInfo.MeasurementSummaryHashType = SPDM_CHALLENGE_REQUEST_ALL_MEASUREMENTS_HASH;
   SpdmDeviceInfo.MeasurementOperation       = SPDM_GET_MEASUREMENTS_REQUEST_MEASUREMENT_OPERATION_TOTAL_NUMBER_OF_MEASUREMENTS;
