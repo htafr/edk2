@@ -334,6 +334,53 @@ CreateSpdmDeviceContext (
 
   SpdmDeviceContext->SpdmVersion = (Data16 >> SPDM_VERSION_NUMBER_SHIFT_BIT);
 
+  ZeroMem (&Parameter, sizeof (Parameter));
+  Parameter.location = SpdmDataLocationLocal;
+  for (UINTN idx = 0 ; idx < SpdmDeviceInfo->SlotCount ; idx++) {
+    Parameter.additional_data[0] = idx;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalPublicCertChain, &Parameter, (VOID *)RequesterCertChain, RequesterCertChainSize);
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      DEBUG ((DEBUG_INFO, "SpdmSetData - %p\n", SpdmReturn));
+      goto Error;
+    }
+
+    Data8 = (UINT8)(0xB0 + idx);
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalKeyPairId, &Parameter, &Data8, sizeof (Data8));
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      DEBUG ((DEBUG_INFO, "SpdmSetData - %p\n", SpdmReturn));
+      goto Error;
+    }
+
+    Data8 = SPDM_CERTIFICATE_INFO_CERT_MODEL_DEVICE_CERT;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalCertInfo, &Parameter, &Data8, sizeof (Data8));
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      DEBUG ((DEBUG_INFO, "SpdmSetData - %p\n", SpdmReturn));
+      goto Error;
+    }
+
+    Data16 = SPDM_KEY_USAGE_BIT_MASK_KEY_EX_USE |
+             SPDM_KEY_USAGE_BIT_MASK_CHALLENGE_USE |
+             SPDM_KEY_USAGE_BIT_MASK_MEASUREMENT_USE |
+             SPDM_KEY_USAGE_BIT_MASK_ENDPOINT_INFO_USE;
+    SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalKeyUsageBitMask, &Parameter, &Data16, sizeof (Data16));
+    if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+      DEBUG ((DEBUG_INFO, "SpdmSetData - %p\n", SpdmReturn));
+      goto Error;
+    }
+  }
+
+  ZeroMem (&Parameter, sizeof (Parameter));
+  Parameter.location = SpdmDataLocationLocal;
+  Data8 = 0;
+  for (UINTN idx = 0 ; idx < SpdmDeviceInfo->SlotCount ; idx++) {
+    Data8 |= (1 << idx);
+  }
+  SpdmReturn = SpdmSetData (SpdmContext, SpdmDataLocalSupportedSlotMask, &Parameter, &Data8, sizeof (Data8));
+  if (LIBSPDM_STATUS_IS_ERROR (SpdmReturn)) {
+    DEBUG ((DEBUG_INFO, "SpdmSetData - %p\n", SpdmReturn));
+    goto Error;
+  }
+
   return SpdmDeviceContext;
 Error:
   DestroySpdmDeviceContext (SpdmDeviceContext);

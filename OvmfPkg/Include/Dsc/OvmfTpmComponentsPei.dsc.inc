@@ -21,7 +21,7 @@
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
       NULL|SecurityPkg/DeviceSecurity/PeiSpdmSecurityLib/PeiSpdmSecurityLib.inf
-      SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmDeviceSecretLibNull.inf
+      SpdmDeviceSecretLib|SecurityPkg/DeviceSecurity/SpdmLib/PeiSpdmDeviceSecretLibSample.inf
       SpdmCryptLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCryptLib.inf
       SpdmCommonLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmCommonLib.inf
       SpdmRequesterLib|SecurityPkg/DeviceSecurity/SpdmLib/SpdmRequesterLib.inf
