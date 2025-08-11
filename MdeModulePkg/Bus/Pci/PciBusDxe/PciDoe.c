@@ -121,7 +121,7 @@ PciIoDoeSend (
 {
   EFI_STATUS          Status;
   PCI_IO_DEVICE       *PciIoDevice;
-  UINT8               Index;
+  UINTN               Index;
   UINTN               Operations;
   UINTN               Remainder;
   UINT32              *Data;
