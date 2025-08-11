@@ -1076,7 +1076,7 @@ PeimEntryMA (
     Status = Tpm2SpdmTpm ();
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "TPM2 not authenticated/measured\n"));
-      // goto Done;
+      goto Done;
     }
 
     S3ErrorReport = FALSE;
