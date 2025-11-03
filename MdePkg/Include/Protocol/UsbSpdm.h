@@ -43,7 +43,7 @@ typedef
 EFI_STATUS
 (EFIAPI *EDKII_USB_SPDM_PROTOCOL_RECEIVE_MESSAGE)(
   IN  EDKII_USB_SPDM_PROTOCOL   *This,
-  IN  UINT16                    Value,
+  IN  UINT16                    Index,
   OUT UINTN                     *DataLength,
   OUT VOID                      *Data
   );

@@ -39,7 +39,7 @@ EFI_STATUS
 EFIAPI
 UsbSpdmReceive (
   IN  EDKII_USB_SPDM_PROTOCOL   *This,
-  IN  UINT16                    Value,
+  IN  UINT16                    Index,
   OUT UINTN                     *DataLength,
   OUT VOID                      *Data
   );

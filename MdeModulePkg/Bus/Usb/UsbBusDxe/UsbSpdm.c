@@ -44,7 +44,7 @@ EFI_STATUS
 EFIAPI
 UsbSpdmReceive (
   IN  EDKII_USB_SPDM_PROTOCOL   *This,
-  IN  UINT16                    Value,
+  IN  UINT16                    Index,
   OUT UINTN                     *DataLength,
   OUT VOID                      *Data
   )
@@ -60,8 +60,8 @@ UsbSpdmReceive (
 
   Request.RequestType = 0x80;
   Request.Request     = USB_REQ_SPDM;
-  Request.Value       = Value;
-  Request.Index       = 0;
+  Request.Value       = 0;
+  Request.Index       = Index;
   Request.Length      = *((UINT16 *)DataLength);
 
   Status = UsbHcControlTransfer (
