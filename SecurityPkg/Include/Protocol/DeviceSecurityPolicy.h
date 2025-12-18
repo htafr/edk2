@@ -32,6 +32,7 @@ typedef struct _EDKII_DEVICE_SECURITY_POLICY_PROTOCOL EDKII_DEVICE_SECURITY_POLI
 ///
 #define EDKII_DEVICE_MEASUREMENT_REQUIRED     BIT0
 #define EDKII_DEVICE_AUTHENTICATION_REQUIRED  BIT0
+#define EDKII_DEVICE_SECURE_SESSION_REQUIRED  BIT0
 
 ///
 /// The device security policy data structure
@@ -40,6 +41,7 @@ typedef struct {
   UINT32    Revision;
   UINT32    MeasurementPolicy;
   UINT32    AuthenticationPolicy;
+  UINT32    SecureSessionPolicy;
 } EDKII_DEVICE_SECURITY_POLICY;
 
 //

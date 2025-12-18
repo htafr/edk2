@@ -124,6 +124,14 @@ SpdmDeviceAuthenticationAndMeasurement (
     }
   }
 
+  if ((SecurityPolicy->SecureSessionPolicy & EDKII_DEVICE_SECURE_SESSION_REQUIRED) != 0) {
+    Status = DoDeviceSecureSession(SpdmDeviceContext, SpdmDeviceInfo);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "DoDeviceSecureSession failed - %r\n", Status));
+    }
+    DEBUG ((DEBUG_INFO, "[EDKII] DoDeviceSecureSession - %r\n", Status));
+  }
+
 Ret:
   DestroySpdmDeviceContext (SpdmDeviceContext);
 

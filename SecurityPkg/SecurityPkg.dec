@@ -26,6 +26,10 @@
 [Includes.Common.Private]
   DeviceSecurity/SpdmLib/Include
   DeviceSecurity/SpdmLib/libspdm/include
+  ../CryptoPkg/Include
+  ../CryptoPkg/Library/Include
+  ../CryptoPkg/Library/OpensslLib/openssl/include
+  ../CryptoPkg/Library/OpensslLib/OpensslGen/include
 
 [LibraryClasses]
   ##  @libraryclass  Provides hash interfaces from different implementations.

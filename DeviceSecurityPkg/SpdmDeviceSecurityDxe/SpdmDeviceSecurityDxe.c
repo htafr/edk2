@@ -1,4 +1,5 @@
 #include "SpdmDeviceSecurityDxe.h"
+#include "industry_standard/spdm.h"
 
 BOOLEAN mSendReceiveBufferAcquired = FALSE;
 VOID    *SpdmMsgBuffer;
@@ -7,23 +8,27 @@ EDKII_DEVICE_SECURITY_POLICY  mDeviceSecurityPolicyNone = {
   EDKII_DEVICE_SECURITY_POLICY_REVISION,
   0,
   0,
+  0,
 };
 
 EDKII_DEVICE_SECURITY_POLICY  mDeviceSecurityPolicyFull = {
   EDKII_DEVICE_SECURITY_POLICY_REVISION,
   EDKII_DEVICE_MEASUREMENT_REQUIRED,
-  EDKII_DEVICE_AUTHENTICATION_REQUIRED
+  EDKII_DEVICE_AUTHENTICATION_REQUIRED,
+  EDKII_DEVICE_SECURE_SESSION_REQUIRED
 };
 
 EDKII_DEVICE_SECURITY_POLICY  mDeviceSecurityPolicyAuthOnly = {
   EDKII_DEVICE_SECURITY_POLICY_REVISION,
   0,
-  EDKII_DEVICE_AUTHENTICATION_REQUIRED
+  EDKII_DEVICE_AUTHENTICATION_REQUIRED,
+  0
 };
 
 EDKII_DEVICE_SECURITY_POLICY  mDeviceSecurityPolicyMeasOnly = {
   EDKII_DEVICE_SECURITY_POLICY_REVISION,
   EDKII_DEVICE_MEASUREMENT_REQUIRED,
+  0,
   0
 };
 
@@ -381,8 +386,8 @@ DeviceAuthentication (
   SpdmDeviceInfo.AcquireReceiverBuffer      = SpdmDeviceAcquireBuffer;
   SpdmDeviceInfo.ReleaseReceiverBuffer      = SpdmDeviceReleaseBuffer;
 
-  SpdmDeviceInfo.Version                    = SPDM_MESSAGE_VERSION_13;
-  SpdmDeviceInfo.SecuredMessageVersion      = SECURED_SPDM_VERSION_11;
+  SpdmDeviceInfo.Version                    = SPDM_MESSAGE_VERSION_12;
+  SpdmDeviceInfo.SecuredMessageVersion      = SECURED_SPDM_VERSION_12;
   SpdmDeviceInfo.RequesterCapabilityFlags   = (0 |
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CERT_CAP | /* conflict with SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PUB_KEY_ID_CAP */
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CHAL_CAP |
@@ -411,14 +416,15 @@ DeviceAuthentication (
   SpdmDeviceInfo.MeasurementHashAlgo        = SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_384 |
                                               SPDM_ALGORITHMS_MEASUREMENT_HASH_ALGO_TPM_ALG_SHA_256;
   SpdmDeviceInfo.ReqBaseAsymAlgo            = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_2048;
-  SpdmDeviceInfo.DheAlgo                    = SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_384_R1 |
-                                              SPDM_ALGORITHMS_DHE_NAMED_GROUP_SECP_256_R1;
+  SpdmDeviceInfo.DheAlgo                    = SPDM_ALGORITHMS_DHE_NAMED_GROUP_FFDHE_3072;
   SpdmDeviceInfo.AeadAlgo                   = SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_256_GCM |
                                               SPDM_ALGORITHMS_AEAD_CIPHER_SUITE_AES_128_GCM;
   SpdmDeviceInfo.KeyScheduleAlgo            = SPDM_ALGORITHMS_KEY_SCHEDULE_HMAC_HASH;
   SpdmDeviceInfo.OtherParamsSupport         = SPDM_ALGORITHMS_OPAQUE_DATA_FORMAT_1 |
                                               SPDM_ALGORITHMS_MULTI_KEY_CONN;
   SpdmDeviceInfo.MelSpec                    = SPDM_MEL_SPECIFICATION_DMTF;
+  SpdmDeviceInfo.SessionPolicy              = SPDM_KEY_EXCHANGE_REQUEST_SESSION_POLICY_TERMINATION_POLICY_RUNTIME_UPDATE;
+  SpdmDeviceInfo.EndSessionAttributes       = SPDM_END_SESSION_REQUEST_ATTRIBUTES_PRESERVE_NEGOTIATED_STATE_CLEAR;
 
   SpdmDeviceInfo.SpdmIoProtocolGuid = &gSpdmIoProtocolGuid;
 

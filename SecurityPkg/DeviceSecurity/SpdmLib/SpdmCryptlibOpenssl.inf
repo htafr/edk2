@@ -1,0 +1,45 @@
+## @file
+#  SPDM library.
+#
+#  Copyright (c) 2024, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SpdmCryptlibOpenssl
+  FILE_GUID                      = AB7F7146-A4CE-4A08-B2B2-03539E7CBE0C
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SpdmCryptlibOpenssl
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 AARCH64
+#
+
+[Sources]
+  SpdmCryptlibOpenssl/KeyContext.h
+  SpdmCryptlibOpenssl/Pk/Dh.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  SecurityPkg/SecurityPkg.dec
+  CryptoPkg/CryptoPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  BaseCryptLib
+  DebugLib
+  MemLibWrapper
+  SpdmCommonLib
+  CryptlibWrapper
+
+[Guids]
+  gEfiDeviceSignatureDatabaseGuid   # CONSUMES
+

@@ -27,6 +27,7 @@
   SpdmConnectionInit.c
   SpdmMeasurement.c
   SpdmAuthentication.c
+  SpdmSecureSession.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -39,6 +40,7 @@
   BaseMemoryLib
   DebugLib
   BaseCryptLib
+  SpdmCryptlibOpenssl
   RngLib
   TpmMeasurementLib
   SpdmRequesterLib

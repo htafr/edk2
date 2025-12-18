@@ -618,8 +618,8 @@ TisPcSpdmTpm (
   SpdmDeviceInfo.AcquireReceiverBuffer      = SpdmDeviceAcquireBuffer;
   SpdmDeviceInfo.ReleaseReceiverBuffer      = SpdmDeviceReleaseBuffer;
 
-  SpdmDeviceInfo.Version                    = SPDM_MESSAGE_VERSION_13;
-  SpdmDeviceInfo.SecuredMessageVersion      = SECURED_SPDM_VERSION_11;
+  SpdmDeviceInfo.Version                    = SPDM_MESSAGE_VERSION_12;
+  SpdmDeviceInfo.SecuredMessageVersion      = SECURED_SPDM_VERSION_12;
 
   SpdmDeviceInfo.RequesterCapabilityFlags   = (0 |
                                               SPDM_GET_CAPABILITIES_REQUEST_FLAGS_CERT_CAP | /* conflict with SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PUB_KEY_ID_CAP */

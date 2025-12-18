@@ -265,6 +265,13 @@ DoDeviceAuthentication (
   OUT EDKII_DEVICE_SECURITY_STATE  *SecurityState
   );
 
+EFI_STATUS
+EFIAPI
+DoDeviceSecureSession(
+  IN  SPDM_DEVICE_CONTEXT     *SpdmDeviceContext,
+  IN  EDKII_SPDM_DEVICE_INFO  *SpdmDeviceInfo
+);
+
 /**
  * This function dump raw data.
  *

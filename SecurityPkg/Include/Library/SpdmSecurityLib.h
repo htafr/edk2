@@ -420,6 +420,8 @@ typedef struct {
   UINT8                                       SlotCount;
   UINT8                                       OtherParamsSupport;
   UINT8                                       MelSpec;
+  UINT8                                       SessionPolicy;
+  UINT8                                       EndSessionAttributes;
 
   EFI_GUID                                    *SpdmIoProtocolGuid;
 } EDKII_SPDM_DEVICE_INFO;
